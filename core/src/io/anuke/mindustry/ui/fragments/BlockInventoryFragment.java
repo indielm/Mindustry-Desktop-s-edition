@@ -59,6 +59,9 @@ public class BlockInventoryFragment extends Fragment{
     private ItemFlow[] itemFilters;
     private static final DecimalFormat flowFormat = new DecimalFormat("#.#");
     private Color flowColor = new Color();
+    private final float stayAlive = 60 * 16, altHoldTime = 60 * 1.25f;
+    private final DecimalFormat df = new DecimalFormat("#.#");
+    private final int textUpdateSpeed = 50; // ms
 
     public BlockInventoryFragment(InputHandler input){
         this.input = input;
@@ -107,30 +110,23 @@ public class BlockInventoryFragment extends Fragment{
     }
 
     private class ItemFlow{
+
+
         final Item item;
-        private final float integrationFreq = 0.984f, textFreq = 0.0065f, stayAlive = 60 * 16, holdTime = 60 * 1.25f;
         private float itemLast, itemAverages, itemLPF, sustain, hold;
-        private final DecimalFormat df = new DecimalFormat("#.#");
         public boolean showing = false, fresh = true;
         private int init = 0;
-        String text;
-        long lastTextTime;
+        private long lastTextTime;
+        private String text;
         ItemFlow(Item itemRef){
             item = itemRef;
             resetFilter();
         }
 
         public boolean filter(){
-
-            if(fresh){
-                resetFilter();
-                itemLast = 0;
-            }
-
+            if(fresh || Inputs.keyTap("altMenu")) resetFilter();
             float time = (1f / 60f) / Gdx.graphics.getDeltaTime();
-            float time2 = 1-(1/60f - Gdx.graphics.getDeltaTime());
             sustain = tile.entity.items.has(item) ? stayAlive : max(sustain - time, -1.0f);
-
             if(isActive()){
                 final int currentItems = tile.entity.items.get(item);
                 if (init>0) init--;
@@ -140,24 +136,21 @@ public class BlockInventoryFragment extends Fragment{
                     return isActive();
                 }
                 if(itemLast == 0) itemLast = currentItems;
-                float dif = (currentItems - itemLast) * time * 60*time2;
+                float dif = (currentItems - itemLast)  * 60 * time;
                 itemLast = currentItems;
-               // float d2 = (pow(abs(itemLPF - itemAverages),2)/3000);
+               // float d2 = (pow(abs(itemLPF - itemAverages),2)/3000); // PID experiment to converge on average quicker
                // p = clamp((p+d2)/2,0.002f,0.22f);
                 if (init>0 ){
-                    itemAverages -= (itemAverages - dif) / 3;
-                    itemLPF = itemLPF -= (itemLPF -itemAverages)/3;///(itemLPF -itemAverages)/8;
+                    itemAverages -= (itemAverages - dif) /3;
+                    itemLPF -= (itemLPF -itemAverages)/3;///(itemLPF -itemAverages)/8;
                 }  else {
                     itemAverages -= (itemAverages - dif)/8;
-                    itemLPF -= (itemLPF -itemAverages)/100;
+                    itemLPF -= (itemLPF -itemAverages)/120;
                 }
-
-
-                if (item.name.equals("copper")) {
+                /*if (item.name.equals("copper")) { //debugging
                     System.out.println(init + " " + (itemAverages) + " " + itemLPF);
-                }
+                }*/
             }
-
             return isActive();
         }
 
@@ -172,17 +165,11 @@ public class BlockInventoryFragment extends Fragment{
 
         public boolean showFilter(){
             boolean showingOld = showing;
-
-            hold = clamp(hold + (Inputs.keyDown("select") ? 1 : -4) * 60 * Gdx.graphics.getDeltaTime(), 0, holdTime);
-            if(hold >= holdTime){
-                showing = true;
-            }else if((hold <= 0) && !Inputs.keyDown("altMenu")) showing = false;
-
-            if(!showing && Inputs.keyTap("altMenu")){
-                showing = true;
-                //fresh = true;
-            }
-            //if (!showingOld && showing) fresh = true;
+            hold = clamp(hold + (Inputs.keyDown("select") ? 1 : -4) * 60 * Gdx.graphics.getDeltaTime(), 0, altHoldTime);
+            if(hold >= altHoldTime) showing = true;
+            else if((hold <= 0) && !Inputs.keyDown("altMenu")) showing = false;
+            if(!showing && Inputs.keyTap("altMenu")) showing = true;
+            if (!showingOld && showing) fresh = true;
             return showing;
         }
 
@@ -195,11 +182,11 @@ public class BlockInventoryFragment extends Fragment{
             flowColor.set(Color.WHITE);
             flowColor.lerp(itemLPF < 0 ? Color.SCARLET : Color.LIME, clamp(Math.abs((float) itemLPF), 0, intensity) / intensity);//looks good but can be hard to read
             if ((abs(itemLPF) < 0.006f) || (init>0))return "[accent]  *";
-            if (System.currentTimeMillis() - lastTextTime > 100){
+            if (System.currentTimeMillis() - lastTextTime > textUpdateSpeed){
                 text = ((signum(itemLPF) > 0 && abs(itemLPF) > 0.09f) ? "[LIME]+" : "[SCARLET]-") + "[#" + flowColor.toString() + "]" + flowFormat.format(abs(itemLPF));
                 lastTextTime = System.currentTimeMillis();
             }
-            return text;//((signum(itemLPF) > 0 && abs(itemLPF) > 0.09f) ? "[LIME]+" : "[SCARLET]-") + "[#" + flowColor.toString() + "]" + flowFormat.format(abs(itemLPF));
+            return text;
         }
 
         public String updateText(){
@@ -219,7 +206,7 @@ public class BlockInventoryFragment extends Fragment{
 
             if(state.is(State.menu) || tile == null || tile.entity == null || !tile.block().isAccessible() || tile.entity.items.total() == 0){
                 hide();
-                System.out.println("rebuild");
+                //System.out.println("rebuild");
                 for(int i = 0; i < content.items().size; i++){
                     itemFilters[i].fresh = true;
                 }

@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import io.anuke.mindustry.ai.PathFlow;
 import io.anuke.mindustry.content.Items;
 import io.anuke.mindustry.content.blocks.DistributionBlocks;
+import io.anuke.mindustry.content.blocks.LiquidBlocks;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.entities.TileEntity;
 import io.anuke.mindustry.entities.traits.BuilderTrait;
@@ -19,6 +20,7 @@ import io.anuke.mindustry.ui.ImageStack;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
+import io.anuke.mindustry.world.blocks.LiquidBlock;
 import io.anuke.mindustry.world.blocks.OreBlock;
 import io.anuke.ucore.core.Events;
 import io.anuke.ucore.core.Graphics;
@@ -30,17 +32,20 @@ import io.anuke.ucore.scene.event.Touchable;
 import io.anuke.ucore.scene.ui.ButtonGroup;
 import io.anuke.ucore.scene.ui.Image;
 import io.anuke.ucore.scene.ui.ImageButton;
+
 import io.anuke.ucore.scene.ui.layout.Table;
 import io.anuke.ucore.util.Bundles;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static io.anuke.mindustry.Vars.*;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.signum;
 
-public class PlacementFragment extends Fragment {
+public class PlacementFragment extends Fragment{
     final int rowWidth = 4;
 
     public Category currentCategory = Category.production;
@@ -49,8 +54,7 @@ public class PlacementFragment extends Fragment {
     Table blockTable, toggler, topTable;
     boolean shown = true;
 
-
-    public PlacementFragment() {
+    public PlacementFragment(){
         Events.on(WorldLoadGraphicsEvent.class, event -> {
             Group group = toggler.getParent();
             toggler.remove();
@@ -59,60 +63,71 @@ public class PlacementFragment extends Fragment {
     }
 
     final Input[] inputGrid = {
-            Input.NUM_1, Input.NUM_2, Input.NUM_3, Input.NUM_4,
-            Input.Q, Input.W, Input.E, Input.R,
-            Input.A, Input.S, Input.D, Input.F,
-            Input.Z, Input.X, Input.C, Input.V,
+    Input.NUM_1, Input.NUM_2, Input.NUM_3, Input.NUM_4,
+    Input.Q, Input.W, Input.E, Input.R,
+    Input.A, Input.S, Input.D, Input.F,
+    Input.Z, Input.X, Input.C, Input.V,
     }, inputCatGrid = {
-            Input.NUM_1, Input.NUM_2,
-            Input.Q, Input.W,
-            Input.A, Input.S,
-            Input.Z, Input.X, Input.C, Input.V,
+    Input.NUM_1, Input.NUM_2,
+    Input.Q, Input.W,
+    Input.A, Input.S,
+    Input.Z, Input.X, Input.C, Input.V,
     };
 
-
-    int prevTileX = -1, prevTileY = 0, prevRot = 0;
     public Tile flowStart;
     public boolean flowReady = false;
     public PathFlow convFlow;
+    //Input snekKey = Input.CONTROL_LEFT;
 
-    void convSnek(InputHandler input) {
+    final List<Block> validSnekMaterial = Arrays.asList(new Block[]{DistributionBlocks.conveyor, DistributionBlocks.titaniumconveyor, LiquidBlocks.conduit, LiquidBlocks.pulseConduit});
+
+    public void snekStart(){
+        if(flowStart != null){
+            flowStart = flowStart.target();
+            flowReady = true;
+            convFlow = new PathFlow();
+        }else flowStart = null;
+    }
+    void convSnek(InputHandler input){
         /*if (Inputs.keyDown((Input.MOUSE_LEFT))){
             Tile t = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target();
             System.out.println(t.block().toString());
-            System.out.println(t.floor().hasOres);
+            System.out.println(t.floor().hasOres); // anuke pls..
             System.out.println(t.floor().hasItems);
-
         }*/
-        if ((input.recipe != null) && (input.recipe.getContentName().contains("conv") || (input.recipe.getContentName().contains("conduit")))) {
+        if(!Inputs.keyDown("snekMode") && convFlow != null){
+            convFlow.success = false;
+            flowReady = false;
+        }
 
-            if (Inputs.keyDown(Input.CONTROL_LEFT)) {
-                if (Inputs.keyTap(Input.MOUSE_LEFT)) {
-                    flowStart = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target();
-                    flowReady = true;
-                    System.out.println("set");
+        if((input.recipe != null) && (validSnekMaterial.contains(input.recipe.result))){
+            if(Inputs.keyDown("snekMode")){
+                if(Inputs.keyTap("select")){
+                    flowStart = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y);
+                    snekStart();
                 }
-                if ((Inputs.keyRelease(Input.MOUSE_LEFT)) && flowReady) {
-                    System.out.println("flow");
-                    convFlow = new PathFlow();
-                    Block convType = DistributionBlocks.titaniumconveyor;
-                    ArrayList<Vector3> path = convFlow.getConvPath(convType, flowStart, world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target());
-                    System.out.println("found path of " + path.size());
-                    for (Vector3 t : path) {
-                        System.out.print(" [" + (int) t.x + "," + (int) t.y + "," + (int) t.z + "]  ");
-                        input.rotation = (int) t.z;
-                        input.tryPlaceBlock((int) t.x, (int) t.y);
+                if((Inputs.keyRelease("select")) && flowReady){
+                    Block convType = input.recipe.result; //DistributionBlocks.titaniumconveyor;//hack to overwrite more things
+                    Tile flowEnd = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y);
+                    if(flowEnd != null){
+                        flowEnd = flowEnd.target();
+                        convFlow.calcPath(convType, flowStart, flowEnd);
+                        if(convFlow.success){
+                            ArrayList<Vector3> path = convFlow.path;
+                            for(Vector3 t : path){
+                                input.rotation = (int) t.z;
+                                input.tryPlaceBlock((int) t.x, (int) t.y);
+                            }
+                        }
                     }
                     flowReady = false;
                 }
             }
-        }
-        else {
+        }else{
             flowReady = false;
         }
 
-
-    /*    if (Inputs.keyRelease(Input.CONTROL_LEFT)) prevTileX = -1;
+    /*    if (Inputs.keyRelease(Input.CONTROL_LEFT)) prevTileX = -1; // Mouse drag conv
 
         if ((Inputs.keyDown(Input.CONTROL_LEFT)) && (Inputs.keyDown(Input.MOUSE_LEFT))
                 && (input.recipe != null) && (input.recipe.getContentName().contains("conv") || input.recipe.getContentName().contains("conduit"))) {
@@ -142,33 +157,32 @@ public class PlacementFragment extends Fragment {
                 prevTileY = tileY;
                 input.tryPlaceBlock(tileX, tileY);             // place the new conv
             }
-
         }*/
     }
 
     /* return true if category update required */
-    boolean gridUpdate(InputHandler input) {
-        if (Inputs.keyDown(Input.ALT_LEFT)&&Inputs.keyDown(Input.SHIFT_LEFT)) {
+    boolean gridUpdate(InputHandler input){
+        if(Inputs.keyDown(Input.ALT_LEFT) && Inputs.keyDown(Input.SHIFT_LEFT)){
             players[0].setVelocity(0, 0);
             int i = 0;
-            for (Input key : inputCatGrid) {
-                if (Inputs.keyDown(key)) {
+            for(Input key : inputCatGrid){
+                if(Inputs.keyDown(key)){
                     input.recipe = Recipe.getByCategory(Category.values()[i]).first();
                     currentCategory = input.recipe.category;
                     return true;
                 }
                 i++;
             }
-        } else if (Inputs.keyDown(Input.ALT_LEFT)) {
-            if (Inputs.keyDown(Input.MOUSE_LEFT)) {
+        }else if(Inputs.keyDown(Input.ALT_LEFT)){
+            if(Inputs.keyDown(Input.MOUSE_LEFT)){
                 Tile tile = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target();
                 input.recipe = Recipe.getByResult(tile.block());
                 return true;
             }
             int i = 0;
             Array<Recipe> recipes = Recipe.getByCategory(currentCategory);
-            for (Input key : inputGrid) {
-                if (Inputs.keyDown(key))
+            for(Input key : inputGrid){
+                if(Inputs.keyDown(key))
                     input.recipe = (i < recipes.size && control.unlocks.isUnlocked(recipes.get(i))) ? recipes.get(i) : null;
                 i++;
             }
@@ -177,7 +191,7 @@ public class PlacementFragment extends Fragment {
     }
 
     @Override
-    public void build(Group parent) {
+    public void build(Group parent){
         parent.fill(full -> {
             toggler = full;
             full.bottom().right().visible(() -> !state.is(State.menu));
@@ -195,16 +209,16 @@ public class PlacementFragment extends Fragment {
                     ButtonGroup<ImageButton> group = new ButtonGroup<>();
                     group.setMinCheckCount(0);
 
-                    for (Recipe recipe : Recipe.getByCategory(currentCategory)) {
+                    for(Recipe recipe : Recipe.getByCategory(currentCategory)){
 
-                        if (index++ % rowWidth == 0) {
+                        if(index++ % rowWidth == 0){
                             blockTable.row();
                         }
 
                         boolean[] unlocked = {false};
 
                         ImageButton button = blockTable.addImageButton("icon-locked", "select", 8 * 4, () -> {
-                            if (control.unlocks.isUnlocked(recipe)) {
+                            if(control.unlocks.isUnlocked(recipe)){
                                 input.recipe = input.recipe == recipe ? null : recipe;
                             }
                         }).size(46f).group(group).get();
@@ -216,19 +230,19 @@ public class PlacementFragment extends Fragment {
                             button.forEach(elem -> elem.setColor(color));
                             button.setChecked(input.recipe == recipe);
 
-                            if (ulock == unlocked[0]) return;
+                            if(ulock == unlocked[0]) return;
                             unlocked[0] = ulock;
 
-                            if (!ulock) {
+                            if(!ulock){
                                 button.replaceImage(new Image("icon-locked"));
-                            } else {
+                            }else{
                                 button.replaceImage(new ImageStack(recipe.result.getCompactIcon()));
                             }
                         });
 
                         button.hovered(() -> hovered = recipe.result);
                         button.exited(() -> {
-                            if (hovered == recipe.result) {
+                            if(hovered == recipe.result){
                                 hovered = null;
                             }
                         });
@@ -241,25 +255,25 @@ public class PlacementFragment extends Fragment {
                 frame.table("button-edge-2", top -> {
                     topTable = top;
                     top.add(new Table()).growX().update(topTable -> {
-                        if ((tileDisplayBlock() == null && lastDisplay == getSelected()) ||
-                                (tileDisplayBlock() != null && lastDisplay == tileDisplayBlock())) return;
+                        if((tileDisplayBlock() == null && lastDisplay == getSelected()) ||
+                        (tileDisplayBlock() != null && lastDisplay == tileDisplayBlock())) return;
 
                         topTable.clear();
                         topTable.top().left().margin(5);
 
                         lastDisplay = getSelected();
 
-                        if (lastDisplay != null) { //show selected recipe
+                        if(lastDisplay != null){ //show selected recipe
                             topTable.table(header -> {
                                 header.left();
                                 header.add(new ImageStack(lastDisplay.getCompactIcon())).size(8 * 4);
                                 header.labelWrap(() ->
-                                        !control.unlocks.isUnlocked(Recipe.getByResult(lastDisplay)) ? Bundles.get("text.blocks.unknown") : lastDisplay.formalName)
-                                        .left().width(190f).padLeft(5);
+                                !control.unlocks.isUnlocked(Recipe.getByResult(lastDisplay)) ? Bundles.get("text.blocks.unknown") : lastDisplay.formalName)
+                                .left().width(190f).padLeft(5);
                                 header.add().growX();
-                                if (control.unlocks.isUnlocked(Recipe.getByResult(lastDisplay))) {
+                                if(control.unlocks.isUnlocked(Recipe.getByResult(lastDisplay))){
                                     header.addButton("?", "clear-partial", () -> ui.content.show(Recipe.getByResult(lastDisplay)))
-                                            .size(8 * 5).padTop(-5).padRight(-5).right().grow();
+                                    .size(8 * 5).padTop(-5).padRight(-5).right().grow();
                                 }
                             }).growX().left();
                             topTable.row();
@@ -267,14 +281,14 @@ public class PlacementFragment extends Fragment {
                             topTable.table(req -> {
                                 req.top().left();
 
-                                for (ItemStack stack : Recipe.getByResult(lastDisplay).requirements) {
+                                for(ItemStack stack : Recipe.getByResult(lastDisplay).requirements){
                                     req.table(line -> {
                                         line.left();
                                         line.addImage(stack.item.region).size(8 * 2);
                                         line.add(stack.item.localizedName()).color(Color.LIGHT_GRAY).padLeft(2).left();
                                         line.labelWrap(() -> {
                                             TileEntity core = players[0].getClosestCore();
-                                            if (core == null || state.mode.infiniteResources) return "*/*";
+                                            if(core == null || state.mode.infiniteResources) return "*/*";
 
                                             int amount = core.items.get(stack.item);
                                             String color = (amount < stack.amount / 2f ? "[red]" : amount < stack.amount ? "[accent]" : "[white]");
@@ -286,7 +300,7 @@ public class PlacementFragment extends Fragment {
                                 }
                             }).growX().left().margin(3);
 
-                        } else if (tileDisplayBlock() != null) { //show selected tile
+                        }else if(tileDisplayBlock() != null){ //show selected tile
                             lastDisplay = tileDisplayBlock();
                             topTable.add(new ImageStack(lastDisplay.getDisplayIcon(hoverTile))).size(8 * 4);
                             topTable.labelWrap(lastDisplay.getDisplayName(hoverTile)).left().width(190f).padLeft(5);
@@ -307,21 +321,21 @@ public class PlacementFragment extends Fragment {
 
                     ButtonGroup<ImageButton> group = new ButtonGroup<>();
 
-                    for (Category cat : Category.values()) {
-                        if (Recipe.getByCategory(cat).isEmpty()) continue;
+                    for(Category cat : Category.values()){
+                        if(Recipe.getByCategory(cat).isEmpty()) continue;
 
                         categories.addImageButton("icon-" + cat.name(), "clear-toggle", 16 * 2, () -> {
                             currentCategory = cat;
                             rebuildCategory.run();
                         }).group(group).update(i -> i.setChecked(currentCategory == cat));
 
-                        if (cat.ordinal() % 2 == 1) categories.row();
+                        if(cat.ordinal() % 2 == 1) categories.row();
                     }
                 }).touchable(Touchable.enabled);
 
                 rebuildCategory.run();
                 frame.update(() -> {
-                    if (gridUpdate(input)) rebuildCategory.run();
+                    if(gridUpdate(input)) rebuildCategory.run();
                     convSnek(input);
                 });
             });
@@ -331,30 +345,30 @@ public class PlacementFragment extends Fragment {
     /**
      * Returns the currently displayed block in the top box.
      */
-    Block getSelected() {
+    Block getSelected(){
         Block toDisplay = null;
 
         Vector2 v = topTable.stageToLocalCoordinates(Graphics.mouse());
 
         //setup hovering tile
-        if (!ui.hasMouse() && topTable.hit(v.x, v.y, false) == null) {
+        if(!ui.hasMouse() && topTable.hit(v.x, v.y, false) == null){
             Tile tile = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y);
-            if (tile != null) {
+            if(tile != null){
                 hoverTile = tile.target();
-            } else {
+            }else{
                 hoverTile = null;
             }
-        } else {
+        }else{
             hoverTile = null;
         }
 
         //block currently selected
-        if (control.input(0).recipe != null) {
+        if(control.input(0).recipe != null){
             toDisplay = control.input(0).recipe.result;
         }
 
         //block hovered on in build menu
-        if (hovered != null) {
+        if(hovered != null){
             toDisplay = hovered;
         }
 
@@ -364,19 +378,19 @@ public class PlacementFragment extends Fragment {
     /**
      * Returns the block currently being hovered over in the world.
      */
-    Block tileDisplayBlock() {
+    Block tileDisplayBlock(){
         return hoverTile == null ? null : hoverTile.block().synthetic() ? hoverTile.block() : hoverTile.floor() instanceof OreBlock ? hoverTile.floor() : null;
     }
 
     /**
      * Show or hide the placement menu.
      */
-    void toggle(float t, Interpolation ip) {
+    void toggle(float t, Interpolation ip){
         toggler.clearActions();
-        if (shown) {
+        if(shown){
             shown = false;
             toggler.actions(Actions.translateBy(toggler.getTranslation().x + toggler.getWidth(), 0, t, ip));
-        } else {
+        }else{
             shown = true;
             toggler.actions(Actions.translateBy(-toggler.getTranslation().x, 0, t, ip));
         }

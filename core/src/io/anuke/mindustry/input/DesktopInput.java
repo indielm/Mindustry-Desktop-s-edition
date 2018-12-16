@@ -222,11 +222,23 @@ public class DesktopInput extends InputHandler {
             player.setMineTile(null);
         }
 
-        if (Inputs.keyTap(section, "select") && !ui.hasMouse()) {
-            if (Inputs.keyDown(Input.CONTROL_LEFT)) mode = none;
-            else if (isPlacing()) {
+        if (Inputs.keyTap("snekMode")) { //TODO this doesn't work, should seamlessly swap between the two modes
+            if (mode == placing){
+                Tile start = world.tileWorld(selectX,selectY);
+                if (start.block()!=null){
+                    ui.hudfrag.blockfrag.flowStart = start;
+                    ui.hudfrag.blockfrag.snekStart();
+                }
+            }
+            mode = none;
+        }
+
+        if ((Inputs.keyTap(section, "select") && !ui.hasMouse()) || (Inputs.keyRelease("snekMode")&&Inputs.keyDown("select"))) {
+
+            if (isPlacing() && (!Inputs.keyDown("snekMode"))) {
                 selectX = cursorX;
                 selectY = cursorY;
+
                 mode = placing;
             } else if (selected != null) {
                 //only begin shooting if there's no cursor event

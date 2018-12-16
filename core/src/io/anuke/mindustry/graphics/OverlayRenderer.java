@@ -1,16 +1,20 @@
 package io.anuke.mindustry.graphics;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import io.anuke.mindustry.ai.PathFlow;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.content.blocks.DistributionBlocks;
 import io.anuke.mindustry.entities.Player;
 import io.anuke.mindustry.entities.TileEntity;
+import io.anuke.mindustry.entities.traits.BuilderTrait;
 import io.anuke.mindustry.game.Team;
+import io.anuke.mindustry.input.DesktopInput;
 import io.anuke.mindustry.input.InputHandler;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Tile;
@@ -25,6 +29,7 @@ import io.anuke.ucore.graphics.Lines;
 import io.anuke.ucore.util.Mathf;
 import io.anuke.ucore.util.Tmp;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 import static io.anuke.mindustry.Vars.*;
@@ -53,20 +58,89 @@ public class OverlayRenderer{
         }
     }
 
-    public void drawTop(){
+    boolean withinPlaceDist(float x2, float y2){
 
-        if (ui.hudfrag.blockfrag.flowReady && ui.hudfrag.blockfrag.convFlow !=null){
-            //ui.hudfrag.blockfrag.convFlow.getPath(world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target())
-            ArrayList<Vector3> path = ui.hudfrag.blockfrag.convFlow.getConvPath(DistributionBlocks.titaniumconveyor, ui.hudfrag.blockfrag.flowStart,world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y).target() );
-            Draw.color(Palette.accent);
-            Lines.stroke(2f);
-            float lx = path.get(0).x, ly = path.get(0).y;
-            for (Vector3 t : path){
-                Lines.line(t.x*tilesize,t.y*tilesize,lx*tilesize,ly*tilesize);
-                lx = t.x;
-                ly = t.y;
+        final float dist2 = BuilderTrait.placeDistance * BuilderTrait.placeDistance;
+        float x1 = players[0].x, y1 = players[0].y;
+        return (((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) < dist2);
+    }
+
+    private void drawPathPrediction(){
+        PathFlow convFlow = ui.hudfrag.blockfrag.convFlow;
+        InputHandler input = control.input(0);
+        Tile endTile = world.tileWorld(Graphics.mouseWorld().x, Graphics.mouseWorld().y);
+        if(!ui.hudfrag.blockfrag.flowReady || convFlow == null || input.recipe == null || endTile == null) return;
+        convFlow.calcPath(DistributionBlocks.titaniumconveyor, ui.hudfrag.blockfrag.flowStart, endTile.target());
+        if(!convFlow.success) return;
+        ArrayList<Vector3> path = convFlow.path;
+        Block block = input.recipe.result;
+        Lines.stroke(1);
+        final float rectSize = block.size * tilesize / 2f - 1;
+        for(Vector3 t : path){
+            float tfx = t.x * tilesize, tfy = t.y * tilesize;
+            if(withinPlaceDist(tfx, tfy)){
+                Draw.color(Palette.accent);
+                Lines.square(tfx, tfy, 5);
+            }else{
+                Lines.square(tfx, tfy - 1, rectSize);
+                Draw.color(Palette.removeBack);
+                Lines.square(tfx, tfy - 1, rectSize);
+                Draw.color(Palette.remove);
+                Lines.square(tfx, tfy, rectSize);
             }
         }
+        Draw.color();
+        String name = input.recipe.result.name;
+        int lastRot = (int) path.get(0).z;
+        path = convFlow.path;
+        int animFrame = (int) ((System.currentTimeMillis() % 200) / 50);
+                        /*    1
+                            2   0
+                              3  rotation directions*/
+        //TODO replace truth tables with logic
+        final int[][] turnTable = {  // vert = rot, horz = lastRot
+        {0 * 90, 3 * 90, 0 * 90, 0 * 90},
+        {1 * 90, 1 * 90, 0 * 90, 1 * 90},
+        {2 * 90, 2 * 90, 2 * 90, 1 * 90},
+        {2 * 90, 3 * 90, 3 * 90, 3 * 90}};
+        final int[][] backwardsAnim = {
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {0, 0, 0, 1},
+        {1, 0, 0, 0}};
+        float x, y;
+        int rot;
+        final float blockOffset = block.offset();
+        if(name.contains("conv")){
+            TextureRegion region;
+            for(Vector3 t : path){
+                x = t.x * tilesize + blockOffset;
+                y = t.y * tilesize + blockOffset;
+                rot = (int) t.z;
+                region = Draw.region(name + "-" + (rot == lastRot ? 0 : 1) + "-" + (backwardsAnim[rot][lastRot] == 0 ? animFrame : 3 - animFrame));
+                if(!withinPlaceDist(x, y))
+                    continue; //TODO move this to PathFlow, bake boolean into future path object
+                Draw.rect(region, x, y, region.getRegionWidth(), region.getRegionHeight(), turnTable[rot][lastRot]);
+                lastRot = rot;
+            }
+        }else{
+            TextureRegion conduitBottom = Draw.region("conduit-bottom");
+            TextureRegion region;
+            for(Vector3 t : path){
+                x = t.x * tilesize + blockOffset;
+                y = t.y * tilesize + blockOffset;
+                rot = (int) t.z;
+                if(!withinPlaceDist(x, y)) continue;
+                Draw.rect(conduitBottom, x, y, conduitBottom.getRegionWidth(), conduitBottom.getRegionHeight(), turnTable[rot][lastRot]);
+                region = Draw.region(name + "-top-" + (rot == lastRot ? 0 : 1));
+                Draw.rect(region, x, y, region.getRegionWidth(), region.getRegionHeight(), turnTable[rot][lastRot]);
+                lastRot = rot;
+            }
+        }
+    }
+
+    public void drawTop(){
+        drawPathPrediction();
 
         for(Player player : playerGroup.all()){
             if(Settings.getBool("indicators") && player != players[0] && player.getTeam() == players[0].getTeam()){
@@ -99,7 +173,7 @@ public class OverlayRenderer{
             buildFadeTime = Mathf.lerpDelta(buildFadeTime, input.isPlacing() ? 1f : 0f, 0.06f);
 
             Draw.reset();
-            Lines.stroke(buildFadeTime*2f);
+            Lines.stroke(buildFadeTime * 2f);
 
             if(buildFadeTime > 0.005f){
                 for(Team enemy : state.teams.enemiesOf(player.getTeam())){
