@@ -59,7 +59,6 @@ public class OverlayRenderer{
     }
 
     boolean withinPlaceDist(float x2, float y2){
-
         final float dist2 = BuilderTrait.placeDistance * BuilderTrait.placeDistance;
         float x1 = players[0].x, y1 = players[0].y;
         return (((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) < dist2);
@@ -188,10 +187,7 @@ public class OverlayRenderer{
                     }
                 }
             }
-
             Draw.reset();
-
-
             //draw selected block bars and info
             if(input.recipe == null && !ui.hasMouse()){
                 Vector2 vec = Graphics.world(input.getMouseX(), input.getMouseY());

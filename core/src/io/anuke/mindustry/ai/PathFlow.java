@@ -39,6 +39,7 @@ public class PathFlow{
         path.clear();
         int[] flowField = convFlow(convType, xyToI(startTile.x, startTile.y));
         int i = xyToI(targetTile.x, targetTile.y);
+        if (!validIndex(i)) return;
         int dir = nextTile(flowField, i);
         int ni = dir + i;
         Tile t = targetTile;
@@ -47,7 +48,7 @@ public class PathFlow{
         while((t != start) && (limit-- > 0)){
             int[] xy = iToXY(ni);
             int rot = cardinalToRot(dir);
-            if(!Build.validPlace(players[0].getTeam(), xy[0], xy[1], convType, rot)){
+            if(!validIndex(ni) ||!Build.validPlace(players[0].getTeam(), xy[0], xy[1], convType, rot)){
                 success = false;
                 return;
             }
