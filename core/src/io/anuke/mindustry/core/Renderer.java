@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.content.fx.Fx;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.entities.Player;
@@ -34,6 +35,7 @@ import io.anuke.ucore.function.Predicate;
 import io.anuke.ucore.graphics.Draw;
 import io.anuke.ucore.graphics.Lines;
 import io.anuke.ucore.graphics.Surface;
+import io.anuke.ucore.input.Input;
 import io.anuke.ucore.modules.RendererModule;
 import io.anuke.ucore.scene.utils.Cursors;
 import io.anuke.ucore.util.Bundles;
@@ -55,6 +57,8 @@ public class Renderer extends RendererModule{
     private int targetscale = baseCameraScale;
     private Rectangle rect = new Rectangle(), rect2 = new Rectangle();
     private Vector2 avgPosition = new Translator();
+    private Vector2 freecamVel = new Vector2();
+
 
     public Renderer(){
         Core.batch = new SpriteBatch(4096);
@@ -114,8 +118,10 @@ public class Renderer extends RendererModule{
 
         clearColor = new Color(0f, 0f, 0f, 1f);
 
+        //effectSurface = Graphics.createSurface(1);
         effectSurface = Graphics.createSurface(Core.cameraScale);
         pixelSurface = Graphics.createSurface(Core.cameraScale);
+
     }
 
     @Override
@@ -146,19 +152,35 @@ public class Renderer extends RendererModule{
             Graphics.clear(Color.BLACK);
         }else{
             Vector2 position = averagePosition();
-
-            if(players[0].isDead()){
-                TileEntity core = players[0].getClosestCore();
-                if(core != null && players[0].spawner == -1){
-                    smoothCamera(core.x, core.y, 0.08f);
-                }else{
-                    smoothCamera(position.x + 0.0001f, position.y + 0.0001f, 0.08f);
+            if (!players[0].freecam){
+                if(players[0].isDead()){
+                    TileEntity core = players[0].getClosestCore();
+                    if(core != null && players[0].spawner == -1){
+                        smoothCamera(core.x, core.y, 0.08f);
+                    }else{
+                        smoothCamera(position.x + 0.0001f, position.y + 0.0001f, 0.08f);
+                    }
+                }else if(!mobile){
+                    setCamera(position.x + 0.0001f, position.y + 0.0001f);
                 }
-            }else if(!mobile){
-                setCamera(position.x + 0.0001f, position.y + 0.0001f);
+
+                camera.position.x = Mathf.clamp(camera.position.x, -tilesize / 2f, world.width() * tilesize - tilesize / 2f);
+                camera.position.y = Mathf.clamp(camera.position.y, -tilesize / 2f, world.height() * tilesize - tilesize / 2f);
             }
-            camera.position.x = Mathf.clamp(camera.position.x, -tilesize / 2f, world.width() * tilesize - tilesize / 2f);
-            camera.position.y = Mathf.clamp(camera.position.y, -tilesize / 2f, world.height() * tilesize - tilesize / 2f);
+            else if (!ui.chatfrag.chatOpen()){
+                final float camSpeed = 24 * (Inputs.keyDown("dash") ? 3.5f : 1);
+                float x = ((Inputs.keyDown(Input.A)) ? -1:0) + ((Inputs.keyDown(Input.D)) ? 1:0);
+                float y = ((Inputs.keyDown(Input.S)) ? -1:0) + ((Inputs.keyDown(Input.W)) ? 1:0);
+                x *= camSpeed;
+                y *= camSpeed;
+                freecamVel.x += x;
+                freecamVel.y += y;
+                freecamVel.x = Mathf.clamp(x,-48,48);
+                freecamVel.y = Mathf.clamp(y,-48,48);
+                smoothCamera(camera.position.x+freecamVel.x, camera.position.y+freecamVel.y,0.08f);
+                freecamVel.x*=0.8f;
+                freecamVel.y*=0.8f;
+            }
 
             float prex = camera.position.x, prey = camera.position.y;
             updateShake(0.75f);
@@ -190,8 +212,15 @@ public class Renderer extends RendererModule{
 
     @Override
     public void draw(){
+        int w = world.width()*tilesize, h =  world.height()*tilesize;
+        //int w = world.width()*4*targetscale, h =  world.height();
+        int pw = pixelSurface.width(), ph = pixelSurface.width();
+        //pixelSurface.setSize((int)camera.viewportWidth, (int)camera.viewportHeight, true);
+        //effectSurface.setSize((int)camera.viewportWidth, (int)camera.viewportHeight, true);
         camera.update();
-        if(Float.isNaN(Core.camera.position.x) || Float.isNaN(Core.camera.position.y)){
+
+        if((Float.isNaN(Core.camera.position.x) || Float.isNaN(Core.camera.position.y)) && (!players[0].freecam)){
+            //System.out.println("fc:" + players[0].freecam);
             Core.camera.position.x = players[0].x;
             Core.camera.position.y = players[0].y;
         }
@@ -201,17 +230,17 @@ public class Renderer extends RendererModule{
         batch.setProjectionMatrix(camera.combined);
 
         Graphics.surface(pixelSurface, false);
-
+        //batch.begin();
         Graphics.clear(clearColor);
 
         blocks.drawFloor();
-
         drawAndInterpolate(groundEffectGroup, e -> e instanceof BelowLiquidTrait);
         drawAndInterpolate(puddleGroup);
         drawAndInterpolate(groundEffectGroup, e -> !(e instanceof BelowLiquidTrait));
 
         blocks.processBlocks();
         blocks.drawShadows();
+
         for(Team team : Team.all){
             if(blocks.isTeamShown(team)){
                 boolean outline = team != players[0].getTeam() && team != Team.none;
@@ -389,7 +418,7 @@ public class Renderer extends RendererModule{
 
     public void clampScale(){
         float s = io.anuke.ucore.scene.ui.layout.Unit.dp.scl(1f);
-        targetscale = Mathf.clamp(targetscale, Math.round(s * 2), Math.round(s * 5));
+        targetscale = Mathf.clamp(targetscale, Math.round(s*1), Math.round(s * 5));
     }
 
     public void takeMapScreenshot(){
@@ -426,7 +455,7 @@ public class Renderer extends RendererModule{
         PixmapIO.writePNG(file, fullPixmap);
         fullPixmap.dispose();
 
-        pixelSurface.setSize(pw, ph, false);
+        //pixelSurface.setSize(pw, ph, false);
         Graphics.getEffectSurface().setSize(pw, ph, false);
 
         ui.showInfoFade(Bundles.format("text.screenshot", file.toString()));

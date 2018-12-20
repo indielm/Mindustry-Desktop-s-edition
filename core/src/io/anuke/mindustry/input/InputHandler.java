@@ -338,8 +338,8 @@ public abstract class InputHandler extends InputAdapter{
     public boolean validPlace(int x, int y, Block type, int rotation){
         for(Tile tile : state.teams.get(player.getTeam()).cores){
             if(tile.distanceTo(x * tilesize, y * tilesize) < coreBuildRange){
-                return Build.validPlace(player.getTeam(), x, y, type, rotation) &&
-                Vector2.dst(player.x, player.y, x * tilesize, y * tilesize) < Player.placeDistance;
+                boolean inRange = (Vector2.dst(player.x, player.y, x * tilesize, y * tilesize) < Player.placeDistance) || player.freecam;
+                return Build.validPlace(player.getTeam(), x, y, type, rotation) && inRange;
             }
         }
 
@@ -347,7 +347,8 @@ public abstract class InputHandler extends InputAdapter{
     }
 
     public boolean validBreak(int x, int y){
-        return Build.validBreak(player.getTeam(), x, y) && Vector2.dst(player.x, player.y, x * tilesize, y * tilesize) < Player.placeDistance;
+        boolean inRange = (Vector2.dst(player.x, player.y, x * tilesize, y * tilesize) < Player.placeDistance) || player.freecam;
+        return Build.validBreak(player.getTeam(), x, y) && inRange;
     }
 
     public void placeBlock(int x, int y, Recipe recipe, int rotation){

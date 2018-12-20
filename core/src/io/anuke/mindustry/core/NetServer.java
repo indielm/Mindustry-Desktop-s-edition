@@ -314,8 +314,8 @@ public class NetServer extends Module{
 
         connection.viewX = viewX;
         connection.viewY = viewY;
-        connection.viewWidth = viewWidth;
-        connection.viewHeight = viewHeight;
+        connection.viewWidth = world.width()*tilesize;//viewWidth;
+        connection.viewHeight = world.height()*tilesize; //viewHeight;
 
         long elapsed = TimeUtils.timeSinceMillis(connection.lastRecievedClientTime);
 

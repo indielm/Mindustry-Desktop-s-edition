@@ -8,6 +8,7 @@ import io.anuke.mindustry.ai.Pathfinder;
 import io.anuke.mindustry.ai.WaveSpawner;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.core.GameState.State;
+import io.anuke.mindustry.entities.Player;
 import io.anuke.mindustry.game.EventType.TileChangeEvent;
 import io.anuke.mindustry.game.EventType.WorldLoadEvent;
 import io.anuke.mindustry.game.Team;
@@ -239,7 +240,7 @@ public class World extends Module{
         this.currentMap = map;
 
         int width = map.meta.width, height = map.meta.height;
-
+        ui.blockActions = new Player[world.height()][world.width()];
         createTiles(width, height);
 
         EntityQuery.resizeTree(0, 0, width * tilesize, height * tilesize);
@@ -304,6 +305,7 @@ public class World extends Module{
     }
 
     public void setBlock(Tile tile, Block block, Team team){
+
         tile.setBlock(block, team);
         if(block.isMultiblock()){
             int offsetx = -(block.size - 1) / 2;

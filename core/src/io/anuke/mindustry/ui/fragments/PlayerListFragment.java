@@ -132,10 +132,21 @@ public class PlayerListFragment extends Fragment{
                     .touchable(() -> Net.client() ? Touchable.disabled : Touchable.enabled)
                     .checked(player.isAdmin);
 
-                    t.addImageButton("icon-zoom-small", "clear-partial", 14 * 2, () -> ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
-
+                    //t.addImageButton("icon-zoom-small", "clear-partial", 14 * 2, () -> ui.showPlayerBlocks(player));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
+                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(ui.showingPlayerBlocks)));
                 }).padRight(12).size(bs + 10f, bs);
             }
+            else {
+                button.add().growY();
+                float bs = (h) / 2f;
+                button.table(t -> {
+                    t.defaults().size(bs);
+                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(ui.showingPlayerBlocks)));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
+
+                   // t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).checked(true).update(c -> c.setColor(player.equals(ui.showingPlayerBlocks)?Palette.darkFlame:Palette.accent));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
+                }).padRight(12).size(bs + 10f, bs);
+            }
+
 
             content.add(button).padBottom(-6).width(350f).maxHeight(h + 14);
             content.row();

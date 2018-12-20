@@ -15,6 +15,7 @@ import io.anuke.mindustry.graphics.Palette;
 import io.anuke.mindustry.net.Net;
 import io.anuke.mindustry.type.Item;
 import io.anuke.mindustry.type.Recipe;
+import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.blocks.BuildBlock;
@@ -187,9 +188,16 @@ public interface BuilderTrait extends Entity{
 
         if(!(tile.block() instanceof BuildBlock)){
             String action, playerName, blockInfo = "";
+            Block b = tile.block();
             boolean doReturn = false;
             playerName = (unit instanceof  Player)  ? playerGroup.getByID(unit.getID()).name : "drone";
-            if (current!=null & current.recipe != null) blockInfo = current.recipe.getContentName() ;
+            //int playerNumber = (unit instanceof  Player)  ? unit.getID() : -1;
+            Player p = (unit instanceof  Player)? (Player)unit : null;
+            if (p!=null) ui.blockActions[current.x][current.y] = p;
+            if (current!=null & current.recipe != null) {
+                blockInfo = current.recipe.getContentName() ;
+                b = current.recipe.result;
+            }
             if(canCreateBlocks() && !current.breaking && Build.validPlace(unit.getTeam(), current.x, current.y, current.recipe.result, current.rotation)){
                 Build.beginPlace(unit.getTeam(), current.x, current.y, current.recipe, current.rotation);
                 action = " began";
@@ -201,8 +209,14 @@ public interface BuilderTrait extends Entity{
                 getPlaceQueue().removeFirst();
                 doReturn = true;
             }
-            if (blockInfo != "")
+
+            if (blockInfo != ""){
+                //if (ui.blockActions==null) ui.blockActions = new Player[world.height()][world.width()];
+                //if (p!=null) ui.blockActions[current.x][current.y] = p;
                 System.out.println(playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
+                //ui.showInfoFade2(playerName,b);//playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
+                ui.showAlert(p,b,current, action);
+            }
             if (doReturn) return;
         }
 
@@ -285,6 +299,7 @@ public interface BuilderTrait extends Entity{
 
     /**Draw placement effects for an entity. This includes mining*/
     default void drawBuilding(Unit unit){
+
         BuildRequest request;
         if(!isBuilding()){
             if(getMineTile() != null){
@@ -300,7 +315,9 @@ public interface BuilderTrait extends Entity{
         if(unit.distanceTo(tile) > placeDistance){
             return;
         }
-
+        //System.out.println("drawBuilding " + request.x + " " +  request.y);
+        Player p = (unit instanceof  Player)? (Player)unit : null;
+        if (p!=null) ui.blockActions[request.x][request.y] = p;
         Draw.color(Palette.accent);
         float focusLen = 3.8f + Mathf.absin(Timers.time(), 1.1f, 0.6f);
         float px = unit.x + Angles.trnsx(unit.rotation, focusLen);

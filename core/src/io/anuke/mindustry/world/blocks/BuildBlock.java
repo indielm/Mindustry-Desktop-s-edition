@@ -62,6 +62,7 @@ public class BuildBlock extends Block{
         Effects.effect(Fx.placeBlock, tile.drawx(), tile.drawy(), block.size);
         threads.runDelay(() -> tile.block().placed(tile));
 
+        ui.blockModified(tile, builderID);
         //last builder was this local client player, call placed()
         if(!headless && builderID == players[0].id){
             //this is run delayed, since if this is called on the server, all clients need to recieve the onBuildFinish()
@@ -199,6 +200,7 @@ public class BuildBlock extends Block{
                 damage(99999);
                 return;
             }
+            if (builder instanceof Player) ui.blockModified(core, builderID);
 
             float maxProgress = checkRequired(core.items, amount, false);
 
@@ -224,6 +226,7 @@ public class BuildBlock extends Block{
             Recipe recipe = Recipe.getByResult(previous);
 
             if(recipe != null){
+                if (builder instanceof Player) ui.blockModified(core, builderID);
                 ItemStack[] requirements = recipe.requirements;
                 if(requirements.length != accumulator.length || totalAccumulator.length != requirements.length){
                     setDeconstruct(previous);
