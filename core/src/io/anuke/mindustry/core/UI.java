@@ -284,11 +284,14 @@ public class UI extends SceneModule{
     public Player showingPlayerBlocks = null;// players[0];
 
     public void showPlayerBlocks(Player p){
-        if(p.equals(showingPlayerBlocks) || playerGroup.all().size>1){
+        if(p.equals(showingPlayerBlocks) || playerGroup.all().size<1){
             showingPlayerBlocks = null;
         }else{
             showingPlayerBlocks = p;
         }
+        System.out.println(p.equals(showingPlayerBlocks) + " " + (playerGroup.all().size>1));//
+        System.out.println(p.name);//
+        if (showingPlayerBlocks!=null) System.out.println(showingPlayerBlocks.name);// showingPlayerBlocks.name);
     }
 
     public void blockModified(Tile t, int id){
