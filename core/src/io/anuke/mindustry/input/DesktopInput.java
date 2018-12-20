@@ -144,7 +144,7 @@ public class DesktopInput extends InputHandler {
             ui.listfrag.toggle();
         }
         if ((state.is(State.playing)) && Inputs.keyTap("graph")){
-            //ui.graphfrag.toggle();
+            ui.graphfrag.toggle();
         }
 
         if (Inputs.keyRelease(section, "select")) {

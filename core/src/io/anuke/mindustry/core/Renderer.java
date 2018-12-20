@@ -212,15 +212,8 @@ public class Renderer extends RendererModule{
 
     @Override
     public void draw(){
-        int w = world.width()*tilesize, h =  world.height()*tilesize;
-        //int w = world.width()*4*targetscale, h =  world.height();
-        int pw = pixelSurface.width(), ph = pixelSurface.width();
-        //pixelSurface.setSize((int)camera.viewportWidth, (int)camera.viewportHeight, true);
-        //effectSurface.setSize((int)camera.viewportWidth, (int)camera.viewportHeight, true);
         camera.update();
-
-        if((Float.isNaN(Core.camera.position.x) || Float.isNaN(Core.camera.position.y)) && (!players[0].freecam)){
-            //System.out.println("fc:" + players[0].freecam);
+        if(Float.isNaN(Core.camera.position.x) || Float.isNaN(Core.camera.position.y)){
             Core.camera.position.x = players[0].x;
             Core.camera.position.y = players[0].y;
         }
@@ -230,17 +223,17 @@ public class Renderer extends RendererModule{
         batch.setProjectionMatrix(camera.combined);
 
         Graphics.surface(pixelSurface, false);
-        //batch.begin();
+
         Graphics.clear(clearColor);
 
         blocks.drawFloor();
+
         drawAndInterpolate(groundEffectGroup, e -> e instanceof BelowLiquidTrait);
         drawAndInterpolate(puddleGroup);
         drawAndInterpolate(groundEffectGroup, e -> !(e instanceof BelowLiquidTrait));
 
         blocks.processBlocks();
         blocks.drawShadows();
-
         for(Team team : Team.all){
             if(blocks.isTeamShown(team)){
                 boolean outline = team != players[0].getTeam() && team != Team.none;
@@ -275,8 +268,6 @@ public class Renderer extends RendererModule{
 
         drawAllTeams(true);
 
-
-
         drawAndInterpolate(bulletGroup);
         drawAndInterpolate(effectGroup);
 
@@ -298,10 +289,6 @@ public class Renderer extends RendererModule{
             Graphics.flushSurface();
         }
 
-       // Draw.color(Palette.power, Palette.powerLight, Mathf.absin(Timers.time(), 5f, 1f));
-       // Lines.stroke(1f);
-        //Lines.line(50,50,control.input(0).getMouseX(), control.input(0).getMouseY());
-
         batch.end();
 
         if(showFog){
@@ -312,10 +299,6 @@ public class Renderer extends RendererModule{
         EntityDraw.setClip(false);
         drawAndInterpolate(playerGroup, p -> !p.isDead() && !p.isLocal, Player::drawName);
         EntityDraw.setClip(true);
-        //Draw.color(Palette.power);
-        //Lines.stroke(4f);
-        //Lines.line(0,0,600,600);
-
         Graphics.end();
         Draw.color();
     }

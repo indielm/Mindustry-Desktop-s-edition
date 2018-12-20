@@ -322,7 +322,7 @@ public class UI extends SceneModule{
             if(action.equals(" began")){
                 table.addImage(b.getEditorIcon()).size(32, 32).padTop(280).padLeft(4);
                 //System.out.println(lastAlertTime - System.currentTimeMillis());
-                if(!lastPlayerAlert.equals(p) || ((System.currentTimeMillis() - lastAlertTime) > 1000)){
+                if(!p.equals(lastPlayerAlert) || ((System.currentTimeMillis() - lastAlertTime) > 1000)){
                     String text = p.name;//"(" + br.x + "," + br.y + ")" + p.name;
                     table.top().add(text).padTop(280).padLeft(4);
                 }
