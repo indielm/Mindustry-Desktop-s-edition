@@ -140,7 +140,7 @@ public class OverlayRenderer{
     }
 
     void drawPlayerActions(){
-        if (ui.showingPlayerBlocks != null && ui.blockActions!=null){
+        if (ui.showingPlayerBlocks != null && ui.blockActions!=null && (ui.blockActions.length>0)){
             for (int x = 0; x < world.width(); x++){
                 for (int y = 0; y < world.height(); y++){
                     if (ui.showingPlayerBlocks.equals(ui.blockActions[x][y])){

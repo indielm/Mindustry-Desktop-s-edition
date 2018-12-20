@@ -193,7 +193,7 @@ public interface BuilderTrait extends Entity{
             playerName = (unit instanceof  Player)  ? playerGroup.getByID(unit.getID()).name : "drone";
             //int playerNumber = (unit instanceof  Player)  ? unit.getID() : -1;
             Player p = (unit instanceof  Player)? (Player)unit : null;
-            if (p!=null) ui.blockActions[current.x][current.y] = p;
+            if ((p!=null) && (ui.blockActions!=null) && (ui.blockActions.length>0)) ui.blockActions[current.x][current.y] = p;
             if (current!=null & current.recipe != null) {
                 blockInfo = current.recipe.getContentName() ;
                 b = current.recipe.result;
@@ -211,7 +211,7 @@ public interface BuilderTrait extends Entity{
             }
 
             if (blockInfo != ""){
-                //if (ui.blockActions==null) ui.blockActions = new Player[world.height()][world.width()];
+                if (ui.blockActions==null || ui.blockActions.length==0) ui.blockActions = new Player[world.height()][world.width()];
                 //if (p!=null) ui.blockActions[current.x][current.y] = p;
                 System.out.println(playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
                 //ui.showInfoFade2(playerName,b);//playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
@@ -317,7 +317,7 @@ public interface BuilderTrait extends Entity{
         }
         //System.out.println("drawBuilding " + request.x + " " +  request.y);
         Player p = (unit instanceof  Player)? (Player)unit : null;
-        if (p!=null) ui.blockActions[request.x][request.y] = p;
+        if ((p!=null)&&(ui.blockActions!=null) && (ui.blockActions.length>0)) ui.blockActions[request.x][request.y] = p;
         Draw.color(Palette.accent);
         float focusLen = 3.8f + Mathf.absin(Timers.time(), 1.1f, 0.6f);
         float px = unit.x + Angles.trnsx(unit.rotation, focusLen);

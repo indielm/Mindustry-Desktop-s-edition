@@ -278,26 +278,38 @@ public class UI extends SceneModule{
         Core.scene.add(table);
     }
 
-    Player lastPlayerAlert = players[0];
+    Player lastPlayerAlert = null;//players[0];
     long lastAlertTime = 0;
     public Player[][] blockActions;// = new Player[world.width()][world.height()];
-    public Player showingPlayerBlocks = players[0];
+    public Player showingPlayerBlocks = null;// players[0];
+
     public void showPlayerBlocks(Player p){
-        if (p.equals(showingPlayerBlocks)){
+        if(p.equals(showingPlayerBlocks) || playerGroup.all().size>1){
             showingPlayerBlocks = null;
-        }
-        else {
+        }else{
             showingPlayerBlocks = p;
         }
     }
 
     public void blockModified(Tile t, int id){
         Player p = playerGroup.getByID(id);
-        if ((p!=null) && (blockActions!=null)) blockActions[t.x][t.y] = p;
+        try{
+            if((p != null) && (blockActions != null) && (blockActions.length > 0)) blockActions[t.x][t.y] = p;
+        }catch(ArrayIndexOutOfBoundsException e){
+            blockActions = new Player[world.width()][world.height()];
+        }
     }
+
     public void blockModified(TileEntity t, int id){
         Player p = playerGroup.getByID(id);
-        if ((p!=null) && (blockActions!=null)) blockActions[(int)t.x][(int)t.y] = p;
+        try{
+            if((p != null) && (blockActions != null)){
+                //if (blockActions.)
+                blockActions[(int) t.x][(int) t.y] = p;
+            }
+        }catch(ArrayIndexOutOfBoundsException e){
+            blockActions = new Player[world.width()][world.height()];
+        }
     }
 
     public void showAlert(Player p, Block b, BuildRequest br, String action){
@@ -310,7 +322,7 @@ public class UI extends SceneModule{
             if(action.equals(" began")){
                 table.addImage(b.getEditorIcon()).size(32, 32).padTop(280).padLeft(4);
                 //System.out.println(lastAlertTime - System.currentTimeMillis());
-                if(!lastPlayerAlert.equals(p) || ((System.currentTimeMillis()-lastAlertTime) > 1000)){
+                if(!lastPlayerAlert.equals(p) || ((System.currentTimeMillis() - lastAlertTime) > 1000)){
                     String text = p.name;//"(" + br.x + "," + br.y + ")" + p.name;
                     table.top().add(text).padTop(280).padLeft(4);
                 }

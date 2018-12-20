@@ -221,7 +221,7 @@ public class World extends Module{
         beginMapLoad();
 
         int width = sectorSize, height = sectorSize;
-
+        ui.blockActions = new Player[world.height()][world.width()];
         Tile[][] tiles = createTiles(width, height);
 
         Map map = new Map("Sector " + sector.x + ", " + sector.y, new MapMeta(0, new ObjectMap<>(), width, height, null), true, () -> null);
