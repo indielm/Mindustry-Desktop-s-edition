@@ -11,7 +11,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
-import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.content.fx.Fx;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.entities.Player;
@@ -59,7 +58,6 @@ public class Renderer extends RendererModule{
     private Vector2 avgPosition = new Translator();
     private Vector2 freecamVel = new Vector2();
 
-
     public Renderer(){
         Core.batch = new SpriteBatch(4096);
 
@@ -72,7 +70,7 @@ public class Renderer extends RendererModule{
             if(effect == Fx.none) return;
             if(Settings.getBool("effects")){
                 Rectangle view = rect.setSize(camera.viewportWidth, camera.viewportHeight)
-                        .setCenter(camera.position.x, camera.position.y);
+                .setCenter(camera.position.x, camera.position.y);
                 Rectangle pos = rect2.setSize(effect.size).setCenter(x, y);
 
                 if(view.overlaps(pos)){
@@ -118,10 +116,8 @@ public class Renderer extends RendererModule{
 
         clearColor = new Color(0f, 0f, 0f, 1f);
 
-        //effectSurface = Graphics.createSurface(1);
         effectSurface = Graphics.createSurface(Core.cameraScale);
         pixelSurface = Graphics.createSurface(Core.cameraScale);
-
     }
 
     @Override
@@ -152,6 +148,7 @@ public class Renderer extends RendererModule{
             Graphics.clear(Color.BLACK);
         }else{
             Vector2 position = averagePosition();
+
             if (!players[0].freecam){
                 if(players[0].isDead()){
                     TileEntity core = players[0].getClosestCore();
@@ -181,7 +178,6 @@ public class Renderer extends RendererModule{
                 freecamVel.x*=0.8f;
                 freecamVel.y*=0.8f;
             }
-
             float prex = camera.position.x, prey = camera.position.y;
             updateShake(0.75f);
 
@@ -328,7 +324,7 @@ public class Renderer extends RendererModule{
             EntityGroup<BaseUnit> group = unitGroups[team.ordinal()];
 
             if(group.count(p -> p.isFlying() == flying) +
-                    playerGroup.count(p -> p.isFlying() == flying && p.getTeam() == team) == 0 && flying) continue;
+            playerGroup.count(p -> p.isFlying() == flying && p.getTeam() == team) == 0 && flying) continue;
 
             drawAndInterpolate(unitGroups[team.ordinal()], u -> u.isFlying() == flying && !u.isDead(), Unit::drawUnder);
             drawAndInterpolate(playerGroup, p -> p.isFlying() == flying && p.getTeam() == team, Unit::drawUnder);
@@ -401,7 +397,7 @@ public class Renderer extends RendererModule{
 
     public void clampScale(){
         float s = io.anuke.ucore.scene.ui.layout.Unit.dp.scl(1f);
-        targetscale = Mathf.clamp(targetscale, Math.round(s*1), Math.round(s * 5));
+        targetscale = Mathf.clamp(targetscale, Math.round(s * 1), Math.round(s * 5));
     }
 
     public void takeMapScreenshot(){
@@ -438,7 +434,7 @@ public class Renderer extends RendererModule{
         PixmapIO.writePNG(file, fullPixmap);
         fullPixmap.dispose();
 
-        //pixelSurface.setSize(pw, ph, false);
+        pixelSurface.setSize(pw, ph, false);
         Graphics.getEffectSurface().setSize(pw, ph, false);
 
         ui.showInfoFade(Bundles.format("text.screenshot", file.toString()));
