@@ -78,6 +78,7 @@ public class PlayerListFragment extends Fragment{
             if(connection == null && Net.server() && !player.isLocal) return;
 
             Table button = new Table();
+
             button.left();
             button.margin(5).marginBottom(10);
 
@@ -140,6 +141,7 @@ public class PlayerListFragment extends Fragment{
                 button.add().growY();
                 float bs = (h) / 2f;
                 button.table(t -> {
+
                     t.defaults().size(bs);
                     t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(ui.showingPlayerBlocks)));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
 

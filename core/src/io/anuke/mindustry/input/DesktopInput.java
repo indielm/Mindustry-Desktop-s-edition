@@ -143,6 +143,9 @@ public class DesktopInput extends InputHandler {
         if (Net.active() && Inputs.keyTap("player_list")) {
             ui.listfrag.toggle();
         }
+        if ((state.is(State.playing)) && Inputs.keyTap("graph")){
+            //ui.graphfrag.toggle();
+        }
 
         if (Inputs.keyRelease(section, "select")) {
             player.isShooting = false;

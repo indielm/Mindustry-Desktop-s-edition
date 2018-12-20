@@ -36,6 +36,7 @@ public class DefaultKeybinds{
                 "screenshot", Input.P,
                 "altMenu", Input.ALT_LEFT,
                 "freeCam", Input.MOUSE_MIDDLE,
+                "graph", Input.G,
                 new Category("multiplayer"),
                 "player_list", Input.TAB,
                 "chat", Input.ENTER,

@@ -56,6 +56,7 @@ public class UI extends SceneModule{
     public final HudFragment hudfrag = new HudFragment();
     public final ChatFragment chatfrag = new ChatFragment();
     public final PlayerListFragment listfrag = new PlayerListFragment();
+    public final OreHistoryFragment graphfrag = new OreHistoryFragment();
     public final BackgroundFragment backfrag = new BackgroundFragment();
     public final LoadingFragment loadfrag = new LoadingFragment();
 
@@ -207,6 +208,7 @@ public class UI extends SceneModule{
         menufrag.build(group);
         chatfrag.container().build(group);
         listfrag.build(group);
+        graphfrag.build(group);
         loadfrag.build(group);
     }
 
@@ -291,11 +293,11 @@ public class UI extends SceneModule{
 
     public void blockModified(Tile t, int id){
         Player p = playerGroup.getByID(id);
-        if (p!=null) blockActions[t.x][t.y] = p;
+        if ((p!=null) && (blockActions!=null)) blockActions[t.x][t.y] = p;
     }
     public void blockModified(TileEntity t, int id){
         Player p = playerGroup.getByID(id);
-        if (p!=null) blockActions[(int)t.x][(int)t.y] = p;
+        if ((p!=null) && (blockActions!=null)) blockActions[(int)t.x][(int)t.y] = p;
     }
 
     public void showAlert(Player p, Block b, BuildRequest br, String action){
