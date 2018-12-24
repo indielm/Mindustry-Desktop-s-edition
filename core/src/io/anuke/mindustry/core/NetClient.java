@@ -428,7 +428,7 @@ public class NetClient extends Module{
                 player.getMineTile(),
                 player.isBoosting, player.isShooting, requests,
                 Core.camera.position.x, Core.camera.position.y,
-                world.width()*tilesize, world.height()*tilesize);
+                world.width()*tilesize, world.height()*tilesize); //DE snapshot bugfix
                 //Core.camera.viewportWidth * Core.camera.zoom * viewScale, Core.camera.viewportHeight * Core.camera.zoom * viewScale);
         }
 

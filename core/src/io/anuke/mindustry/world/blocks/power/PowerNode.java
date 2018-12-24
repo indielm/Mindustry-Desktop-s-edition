@@ -257,7 +257,6 @@ public class PowerNode extends PowerBlock{
         Draw.color(Palette.power, Palette.powerLight, Mathf.absin(Timers.time(), 5f, 1f));
         Lines.stroke(1f);
 
-
         for(int i = 0; i < segments; i++){
             float f1 = (float)i / segments;
             float f2 = (float)(i+1) / segments;

@@ -13,13 +13,14 @@ import static io.anuke.mindustry.Vars.players;
 import static io.anuke.mindustry.Vars.world;
 
 public class PathFlow{
-    private int[] field;
+    public int[] field;
     public boolean success = false;
-    private final int width, height, sizeSq;
+    private final int width, height;
+    public final int sizeSq;
     private final int[] cardinals;
     private final int oreAvoidWeight = 3,
-    convLimit = 100,
-    maxSearchLength = 140; //TODO lower to optimize flowfield generation time
+    convLimit = 200,
+    maxSearchLength = 255; //TODO lower to optimize flowfield generation time
     public ArrayList<Vector3> path = new ArrayList<>(); //TODO replace ArrayList<Vector3> with some proper(int) x,y,rotation class
     private ArrayList<Vector3> reverse = new ArrayList<>();
     Tile start, target;
@@ -74,7 +75,7 @@ public class PathFlow{
     }
 
     private boolean validIndex(int i){
-        return ((i > width) && (i < sizeSq - width));
+        return ((i > width) && (i < sizeSq - width) && (i%width>0));
     }
 
     private int nextTile(int[] flow, int i){ // return the cardinal direction with the highest flow value from packed coordinate i

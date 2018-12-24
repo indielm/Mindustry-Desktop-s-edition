@@ -254,7 +254,6 @@ public class ChatFragment extends Table{
         fadetime = Math.min(fadetime, messagesShown) + 1f;
     }
 
-
     private static class ChatMessage{
         public final String sender;
         public final String message;

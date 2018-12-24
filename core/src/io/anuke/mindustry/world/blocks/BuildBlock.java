@@ -61,9 +61,8 @@ public class BuildBlock extends Block{
         world.setBlock(tile, block, team);
         Effects.effect(Fx.placeBlock, tile.drawx(), tile.drawy(), block.size);
         threads.runDelay(() -> tile.block().placed(tile));
+        renderer.overlays.blockModified(tile, builderID);
 
-        ui.blockModified(tile, builderID);
-        //last builder was this local client player, call placed()
         if(!headless && builderID == players[0].id){
             //this is run delayed, since if this is called on the server, all clients need to recieve the onBuildFinish()
             //event first before they can recieve the placed() event modification results
@@ -196,12 +195,11 @@ public class BuildBlock extends Block{
         private float[] totalAccumulator;
 
         public void construct(Unit builder, TileEntity core, float amount){
+            System.out.println("testCon");
             if(recipe == null){
                 damage(99999);
                 return;
             }
-            if (builder instanceof Player) ui.blockModified(core, builderID);
-
             float maxProgress = checkRequired(core.items, amount, false);
 
             for(int i = 0; i < recipe.requirements.length; i++){
@@ -216,7 +214,7 @@ public class BuildBlock extends Block{
             if(builder instanceof Player){
                 builderID = builder.getID();
             }
-            
+
             if(progress >= 1f || state.mode.infiniteResources){
                 Call.onConstructFinish(tile, recipe.result, builderID, tile.getRotation(), builder.getTeam());
             }
@@ -224,10 +222,10 @@ public class BuildBlock extends Block{
 
         public void deconstruct(Unit builder, TileEntity core, float amount){
             Recipe recipe = Recipe.getByResult(previous);
-
+            System.out.println("testDe");
             if(recipe != null){
-                if (builder instanceof Player) ui.blockModified(core, builderID);
                 ItemStack[] requirements = recipe.requirements;
+
                 if(requirements.length != accumulator.length || totalAccumulator.length != requirements.length){
                     setDeconstruct(previous);
                 }

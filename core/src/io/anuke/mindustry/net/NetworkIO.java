@@ -288,7 +288,6 @@ public class NetworkIO{
 
             //read raw snapshot
             netClient.readSnapshot(stream);
-            ui.blockActions = new Player[world.height()][world.width()];
 
         }catch(IOException e){
             throw new RuntimeException(e);

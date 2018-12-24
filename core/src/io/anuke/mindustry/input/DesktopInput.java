@@ -66,7 +66,7 @@ public class DesktopInput extends InputHandler {
 
             for (TextureRegion region : regions) {
                 Draw.rect(region, x * tilesize + block.offset(), y * tilesize + block.offset(),
-                        region.getRegionWidth() * selectScale, region.getRegionHeight() * selectScale, block.rotate ? rotation * 90 : 0);
+                region.getRegionWidth() * selectScale, region.getRegionHeight() * selectScale, block.rotate ? rotation * 90 : 0);
             }
         } else {
             Draw.color(Palette.removeBack);
@@ -97,7 +97,7 @@ public class DesktopInput extends InputHandler {
                 if (i + recipe.result.size > result.getLength() && recipe.result.rotate) {
                     Draw.color(!validPlace(x, y, recipe.result, result.rotation) ? Palette.remove : Palette.placeRotate);
                     Draw.grect("place-arrow", x * tilesize + recipe.result.offset(),
-                            y * tilesize + recipe.result.offset(), result.rotation * 90 - 90);
+                    y * tilesize + recipe.result.offset(), result.rotation * 90 - 90);
                 }
 
                 drawPlace(x, y, recipe.result, result.rotation);
@@ -129,7 +129,7 @@ public class DesktopInput extends InputHandler {
             if (recipe.result.rotate) {
                 Draw.color(!validPlace(cursorX, cursorY, recipe.result, rotation) ? Palette.remove : Palette.placeRotate);
                 Draw.grect("place-arrow", cursorX * tilesize + recipe.result.offset(),
-                        cursorY * tilesize + recipe.result.offset(), rotation * 90 - 90);
+                cursorY * tilesize + recipe.result.offset(), rotation * 90 - 90);
             }
             drawPlace(cursorX, cursorY, recipe.result, rotation);
             recipe.result.drawPlace(cursorX, cursorY, rotation, validPlace(cursorX, cursorY, recipe.result, rotation));
@@ -144,7 +144,7 @@ public class DesktopInput extends InputHandler {
             ui.listfrag.toggle();
         }
         if ((state.is(State.playing)) && Inputs.keyTap("graph")){
-            ui.graphfrag.toggle();
+            //ui.graphfrag.toggle();
         }
 
         if (Inputs.keyRelease(section, "select")) {
@@ -246,14 +246,14 @@ public class DesktopInput extends InputHandler {
             } else if (selected != null) {
                 //only begin shooting if there's no cursor event
                 if (!tileTapped(selected) && !tryTapPlayer(Graphics.mouseWorld().x, Graphics.mouseWorld().y) && player.getPlaceQueue().size == 0 && !droppingItem &&
-                        !tryBeginMine(selected) && player.getMineTile() == null) {
+                !tryBeginMine(selected) && player.getMineTile() == null) {
                     player.isShooting = true;
                 }
             } else { //if it's out of bounds, shooting is just fine
                 player.isShooting = true;
             }
         } else if (Inputs.keyTap(section, "deselect") && (recipe != null || mode != none || player.isBuilding()) &&
-                !(player.getCurrentRequest() != null && player.getCurrentRequest().breaking && KeyBinds.get(section, "deselect") == KeyBinds.get(section, "break"))) {
+        !(player.getCurrentRequest() != null && player.getCurrentRequest().breaking && KeyBinds.get(section, "deselect") == KeyBinds.get(section, "break"))) {
             if (recipe == null) {
                 player.clearBuilding();
             }

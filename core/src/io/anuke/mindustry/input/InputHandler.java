@@ -93,17 +93,17 @@ public abstract class InputHandler extends InputAdapter{
                     tile.block().getStackOffset(item, tile, stackTrns);
 
                     ItemTransfer.create(item,
-                            player.x + Angles.trnsx(player.rotation + 180f, backTrns), player.y + Angles.trnsy(player.rotation + 180f, backTrns),
-                            new Translator(tile.drawx() + stackTrns.x, tile.drawy() + stackTrns.y), () -> {
-                                if(tile.block() != block || tile.entity == null) return;
+                    player.x + Angles.trnsx(player.rotation + 180f, backTrns), player.y + Angles.trnsy(player.rotation + 180f, backTrns),
+                    new Translator(tile.drawx() + stackTrns.x, tile.drawy() + stackTrns.y), () -> {
+                        if(tile.block() != block || tile.entity == null) return;
 
-                                tile.block().handleStack(item, removed, tile, player);
-                                remaining[1] -= removed;
+                        tile.block().handleStack(item, removed, tile, player);
+                        remaining[1] -= removed;
 
-                                if(end && remaining[1] > 0){
-                                    tile.block().handleStack(item, remaining[1], tile, player);
-                                }
-                            });
+                        if(end && remaining[1] > 0){
+                            tile.block().handleStack(item, remaining[1], tile, player);
+                        }
+                    });
 
                     remaining[0] -= removed;
 
@@ -175,8 +175,8 @@ public abstract class InputHandler extends InputAdapter{
         if(tile.block().configurable && tile.getTeam() == player.getTeam()){
             consumed = true;
             if(((!frag.config.isShown() && tile.block().shouldShowConfigure(tile, player)) //if the config fragment is hidden, show
-                    //alternatively, the current selected block can 'agree' to switch config tiles
-                    || (frag.config.isShown() && frag.config.getSelectedTile().block().onConfigureTileTapped(frag.config.getSelectedTile(), tile)))){
+            //alternatively, the current selected block can 'agree' to switch config tiles
+            || (frag.config.isShown() && frag.config.getSelectedTile().block().onConfigureTileTapped(frag.config.getSelectedTile(), tile)))){
                 frag.config.showConfig(tile);
             }
             //otherwise...
@@ -246,10 +246,10 @@ public abstract class InputHandler extends InputAdapter{
 
     boolean canMine(Tile tile){
         return !ui.hasMouse()
-                && tile.floor().drops != null && tile.floor().drops.item.hardness <= player.mech.drillPower
-                && !tile.floor().playerUnmineable
-                && player.inventory.canAcceptItem(tile.floor().drops.item)
-                && tile.block() == Blocks.air && player.distanceTo(tile.worldx(), tile.worldy()) <= Player.mineDistance;
+        && tile.floor().drops != null && tile.floor().drops.item.hardness <= player.mech.drillPower
+        && !tile.floor().playerUnmineable
+        && player.inventory.canAcceptItem(tile.floor().drops.item)
+        && tile.block() == Blocks.air && player.distanceTo(tile.worldx(), tile.worldy()) <= Player.mineDistance;
     }
 
     /**Returns the tile at the specified MOUSE coordinates.*/

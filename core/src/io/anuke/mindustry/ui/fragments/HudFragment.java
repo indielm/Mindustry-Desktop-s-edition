@@ -7,7 +7,6 @@ import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
-import io.anuke.mindustry.content.blocks.PowerBlocks;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.game.EventType.StateChangeEvent;
 import io.anuke.mindustry.game.Team;
@@ -19,8 +18,6 @@ import io.anuke.mindustry.type.Recipe;
 import io.anuke.mindustry.ui.IntFormat;
 import io.anuke.mindustry.ui.Minimap;
 import io.anuke.mindustry.ui.dialogs.FloatingDialog;
-import io.anuke.mindustry.world.Block;
-import io.anuke.mindustry.world.blocks.PowerBlock;
 import io.anuke.ucore.core.*;
 import io.anuke.ucore.graphics.Hue;
 import io.anuke.ucore.scene.Element;
@@ -37,15 +34,10 @@ import io.anuke.ucore.scene.ui.layout.Unit;
 import io.anuke.ucore.util.Bundles;
 import io.anuke.ucore.util.Mathf;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static io.anuke.mindustry.Vars.*;
 
 public class HudFragment extends Fragment{
     public final PlacementFragment blockfrag = new PlacementFragment();
-   // public final MonitorFragment monitorfrag = new MonitorFragment();
 
     private ImageButton menu, flip;
     private Stack wavetable;
@@ -216,8 +208,6 @@ public class HudFragment extends Fragment{
         });
 
         blockfrag.build(Core.scene.getRoot());
-        //monitorfrag.build(Core.scene.getRoot());
-       // monitorfrag.rebuild();
     }
 
     public void showToast(String text){
@@ -361,13 +351,11 @@ public class HudFragment extends Fragment{
         if(shown){
             shown = false;
             blockfrag.toggle(dur, in);
-            //monitorfrag.toggle(dur, in);
             wavetable.actions(Actions.translateBy(0, (wavetable.getHeight() + Unit.dp.scl(dsize) + Unit.dp.scl(6)) - wavetable.getTranslation().y, dur, in));
             infolabel.actions(Actions.translateBy(0, (wavetable.getHeight()) - wavetable.getTranslation().y, dur, in));
         }else{
             shown = true;
             blockfrag.toggle(dur, in);
-           // monitorfrag.toggle(dur, in);
             wavetable.actions(Actions.translateBy(0, -wavetable.getTranslation().y, dur, in));
             infolabel.actions(Actions.translateBy(0, -infolabel.getTranslation().y, dur, in));
         }

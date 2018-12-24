@@ -138,8 +138,8 @@ public class BlockInventoryFragment extends Fragment{
                 if(itemLast == 0) itemLast = currentItems;
                 float dif = (currentItems - itemLast)  * 60 * time;
                 itemLast = currentItems;
-               // float d2 = (pow(abs(itemLPF - itemAverages),2)/3000); // PID experiment to converge on average quicker
-               // p = clamp((p+d2)/2,0.002f,0.22f);
+                // float d2 = (pow(abs(itemLPF - itemAverages),2)/3000); // PID experiment to converge on average quicker
+                // p = clamp((p+d2)/2,0.002f,0.22f);
                 if (init>0 ){
                     itemAverages -= (itemAverages - dif) /3;
                     itemLPF -= (itemLPF -itemAverages)/3;///(itemLPF -itemAverages)/8;

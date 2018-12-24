@@ -111,9 +111,9 @@ public class PlayerListFragment extends Fragment{
                     t.defaults().size(bs);
 
                     t.addImageButton("icon-ban", "clear-partial", 14 * 2,
-                        () -> ui.showConfirm("$text.confirm", "$text.confirmban", () -> Call.onAdminRequest(player, AdminAction.ban)));
+                    () -> ui.showConfirm("$text.confirm", "$text.confirmban", () -> Call.onAdminRequest(player, AdminAction.ban)));
                     t.addImageButton("icon-cancel", "clear-partial", 16 * 2,
-                        () -> ui.showConfirm("$text.confirm", "$text.confirmkick", () -> Call.onAdminRequest(player, AdminAction.kick)));
+                    () -> ui.showConfirm("$text.confirm", "$text.confirmkick", () -> Call.onAdminRequest(player, AdminAction.kick)));
 
                     t.row();
 
@@ -134,18 +134,15 @@ public class PlayerListFragment extends Fragment{
                     .checked(player.isAdmin);
 
                     //t.addImageButton("icon-zoom-small", "clear-partial", 14 * 2, () -> ui.showPlayerBlocks(player));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
-                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(ui.showingPlayerBlocks)));
+                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> renderer.overlays.showingPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(renderer.overlays.showingPlayerBlocks)));
                 }).padRight(12).size(bs + 10f, bs);
             }
             else {
                 button.add().growY();
                 float bs = (h) / 2f;
                 button.table(t -> {
-
                     t.defaults().size(bs);
-                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(ui.showingPlayerBlocks)));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
-
-                   // t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> ui.showPlayerBlocks(player)).checked(true).update(c -> c.setColor(player.equals(ui.showingPlayerBlocks)?Palette.darkFlame:Palette.accent));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
+                    t.addImageButton("icon-zoom-small", "clear-toggle-partial", 14 * 2, () -> renderer.overlays.showingPlayerBlocks(player)).color(Palette.darkFlame).update(c -> c.setChecked(player.equals(renderer.overlays.showingPlayerBlocks)));//ui.showError("Currently unimplemented.")/*Call.onAdminRequest(player, AdminAction.trace)*/);
                 }).padRight(12).size(bs + 10f, bs);
             }
 

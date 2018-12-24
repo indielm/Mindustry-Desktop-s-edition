@@ -181,6 +181,7 @@ public interface BuilderTrait extends Entity{
         }
 
         Tile tile = world.tile(current.x, current.y);
+        if (unit instanceof  Player) renderer.overlays.blockModified(tile,unit.getID());
 
         if(unit.distanceTo(tile) > placeDistance){
             return;
@@ -193,7 +194,6 @@ public interface BuilderTrait extends Entity{
             playerName = (unit instanceof  Player)  ? playerGroup.getByID(unit.getID()).name : "drone";
             //int playerNumber = (unit instanceof  Player)  ? unit.getID() : -1;
             Player p = (unit instanceof  Player)? (Player)unit : null;
-            if ((p!=null) && (ui.blockActions!=null) && (ui.blockActions.length>0)) ui.blockActions[current.x][current.y] = p;
             if (current!=null & current.recipe != null) {
                 blockInfo = current.recipe.getContentName() ;
                 b = current.recipe.result;
@@ -211,9 +211,10 @@ public interface BuilderTrait extends Entity{
             }
 
             if (blockInfo != ""){
-                if (ui.blockActions==null || ui.blockActions.length==0) ui.blockActions = new Player[world.height()][world.width()];
+                //if (unit instanceof  Player) renderer.overlays.blockModified(tile.entity,unit.getID());
+                //if (renderer.overlays.blockActions==null) ui.blockActions = new Player[world.height()][world.width()];
                 //if (p!=null) ui.blockActions[current.x][current.y] = p;
-                System.out.println(playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
+                //System.out.println(playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
                 //ui.showInfoFade2(playerName,b);//playerName + action + " a " + blockInfo + " at " + current.x + "," + current.y);
                 ui.showAlert(p,b,current, action);
             }
@@ -299,7 +300,6 @@ public interface BuilderTrait extends Entity{
 
     /**Draw placement effects for an entity. This includes mining*/
     default void drawBuilding(Unit unit){
-
         BuildRequest request;
         if(!isBuilding()){
             if(getMineTile() != null){
@@ -311,13 +311,11 @@ public interface BuilderTrait extends Entity{
         request = getCurrentRequest();
 
         Tile tile = world.tile(request.x, request.y);
-
+        if (unit instanceof  Player) renderer.overlays.blockModified(tile,unit.getID());
         if(unit.distanceTo(tile) > placeDistance){
             return;
         }
-        //System.out.println("drawBuilding " + request.x + " " +  request.y);
-        Player p = (unit instanceof  Player)? (Player)unit : null;
-        if ((p!=null)&&(ui.blockActions!=null) && (ui.blockActions.length>0)) ui.blockActions[request.x][request.y] = p;
+
         Draw.color(Palette.accent);
         float focusLen = 3.8f + Mathf.absin(Timers.time(), 1.1f, 0.6f);
         float px = unit.x + Angles.trnsx(unit.rotation, focusLen);

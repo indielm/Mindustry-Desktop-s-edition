@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import io.anuke.mindustry.content.blocks.Blocks;
+import io.anuke.mindustry.entities.Player;
 import io.anuke.mindustry.entities.TileEntity;
 import io.anuke.mindustry.entities.traits.TargetTrait;
 import io.anuke.mindustry.game.Team;
@@ -44,6 +45,8 @@ public class Tile implements PosTrait, TargetTrait{
     private byte elevation;
     /** Fog visibility status: 3 states, but saved as a single bit. 0 = unexplored, 1 = visited, 2 = currently visible (saved as 1)*/
     private byte visibility;
+
+    public Player lastPlayer;
 
     public Tile(int x, int y){
         this.x = (short) x;

@@ -3,13 +3,10 @@ package io.anuke.mindustry.ui.fragments;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
-import io.anuke.mindustry.ai.PathFlow;
-import io.anuke.mindustry.content.Items;
 import io.anuke.mindustry.content.blocks.DistributionBlocks;
 import io.anuke.mindustry.content.blocks.LiquidBlocks;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.entities.TileEntity;
-import io.anuke.mindustry.entities.traits.BuilderTrait;
 import io.anuke.mindustry.game.EventType.WorldLoadGraphicsEvent;
 import io.anuke.mindustry.graphics.Palette;
 import io.anuke.mindustry.input.InputHandler;
@@ -18,9 +15,7 @@ import io.anuke.mindustry.type.ItemStack;
 import io.anuke.mindustry.type.Recipe;
 import io.anuke.mindustry.ui.ImageStack;
 import io.anuke.mindustry.world.Block;
-import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
-import io.anuke.mindustry.world.blocks.LiquidBlock;
 import io.anuke.mindustry.world.blocks.OreBlock;
 import io.anuke.ucore.core.Events;
 import io.anuke.ucore.core.Graphics;
@@ -40,10 +35,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.anuke.mindustry.DE.PathFlow;
+
 import static io.anuke.mindustry.Vars.*;
-import static java.lang.Math.abs;
-import static java.lang.Math.pow;
-import static java.lang.Math.signum;
 
 public class PlacementFragment extends Fragment{
     final int rowWidth = 4;
@@ -163,7 +157,7 @@ public class PlacementFragment extends Fragment{
     /* return true if category update required */
     boolean gridUpdate(InputHandler input){
         if(Inputs.keyDown(Input.ALT_LEFT) && Inputs.keyDown(Input.SHIFT_LEFT)){
-            players[0].setVelocity(0, 0);
+            //players[0].setVelocity(0, 0);
             int i = 0;
             for(Input key : inputCatGrid){
                 if(Inputs.keyDown(key)){

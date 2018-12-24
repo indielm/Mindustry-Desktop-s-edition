@@ -9,38 +9,29 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Align;
-import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.content.blocks.*;
 import io.anuke.mindustry.editor.MapEditorDialog;
 import io.anuke.mindustry.entities.Player;
-import io.anuke.mindustry.entities.TileEntity;
 import io.anuke.mindustry.entities.traits.BuilderTrait.BuildRequest;
 import io.anuke.mindustry.game.EventType.ResizeEvent;
 import io.anuke.mindustry.graphics.Palette;
 import io.anuke.mindustry.input.InputHandler;
-import io.anuke.mindustry.type.Category;
-import io.anuke.mindustry.type.Recipe;
 import io.anuke.mindustry.ui.dialogs.*;
 import io.anuke.mindustry.ui.fragments.*;
 import io.anuke.mindustry.world.Block;
-import io.anuke.mindustry.world.Tile;
 import io.anuke.ucore.core.*;
 import io.anuke.ucore.function.Consumer;
 import io.anuke.ucore.graphics.Draw;
-import io.anuke.ucore.input.Input;
 import io.anuke.ucore.modules.SceneModule;
 import io.anuke.ucore.scene.Group;
 import io.anuke.ucore.scene.Skin;
 import io.anuke.ucore.scene.actions.Actions;
 import io.anuke.ucore.scene.ui.Dialog;
-import io.anuke.ucore.scene.ui.Label;
 import io.anuke.ucore.scene.ui.TextField;
 import io.anuke.ucore.scene.ui.TextField.TextFieldFilter;
 import io.anuke.ucore.scene.ui.TooltipManager;
 import io.anuke.ucore.scene.ui.layout.Table;
 import io.anuke.ucore.scene.ui.layout.Unit;
-
-import io.anuke.ucore.util.Mathf;
 import io.anuke.ucore.util.Strings;
 
 import java.util.Arrays;
@@ -56,7 +47,6 @@ public class UI extends SceneModule{
     public final HudFragment hudfrag = new HudFragment();
     public final ChatFragment chatfrag = new ChatFragment();
     public final PlayerListFragment listfrag = new PlayerListFragment();
-    public final OreHistoryFragment graphfrag = new OreHistoryFragment();
     public final BackgroundFragment backfrag = new BackgroundFragment();
     public final LoadingFragment loadfrag = new LoadingFragment();
 
@@ -82,34 +72,24 @@ public class UI extends SceneModule{
     public ContentInfoDialog content;
     public SectorsDialog sectors;
     public MissionDialog missions;
-    List<Block> expensiveBlocks = Arrays.asList(PowerBlocks.thoriumReactor, PowerBlocks.rtgGenerator, PowerBlocks.turbineGenerator, PowerBlocks.thermalGenerator,
-    ProductionBlocks.blastDrill, ProductionBlocks.oilExtractor,
-    StorageBlocks.container, StorageBlocks.vault, StorageBlocks.core,
-    DefenseBlocks.forceProjector, DefenseBlocks.mendProjector, DefenseBlocks.overdriveProjector,
-    CraftingBlocks.arcsmelter, CraftingBlocks.blastMixer, CraftingBlocks.siliconsmelter, CraftingBlocks.pyratiteMixer, CraftingBlocks.plastaniumCompressor, CraftingBlocks.phaseWeaver, CraftingBlocks.centrifuge,
-    TurretBlocks.ripple, TurretBlocks.meltdown, TurretBlocks.spectre, TurretBlocks.fuse, TurretBlocks.cyclone,
-    LiquidBlocks.rotaryPump, LiquidBlocks.thermalPump,
-    UnitBlocks.commandCenter, UnitBlocks.fortressFactory, UnitBlocks.revenantFactory, UnitBlocks.ghoulFactory, UnitBlocks.spiritFactory, UnitBlocks.phantomFactory,
-    DistributionBlocks.massDriver
-    );
 
     public UI(){
         Dialog.setShowAction(() -> sequence(
-        alpha(0f),
-        originCenter(),
-        moveToAligned(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f, Align.center),
-        scaleTo(0.0f, 1f),
-        parallel(
-        scaleTo(1f, 1f, 0.1f, Interpolation.fade),
-        fadeIn(0.1f, Interpolation.fade)
-        )
+            alpha(0f),
+            originCenter(),
+            moveToAligned(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f, Align.center),
+            scaleTo(0.0f, 1f),
+            parallel(
+                scaleTo(1f, 1f, 0.1f, Interpolation.fade),
+                fadeIn(0.1f, Interpolation.fade)
+            )
         ));
 
         Dialog.setHideAction(() -> sequence(
-        parallel(
-        scaleTo(0.01f, 0.01f, 0.1f, Interpolation.fade),
-        fadeOut(0.1f, Interpolation.fade)
-        )
+            parallel(
+                scaleTo(0.01f, 0.01f, 0.1f, Interpolation.fade),
+                fadeOut(0.1f, Interpolation.fade)
+            )
         ));
 
         TooltipManager.getInstance().animations = false;
@@ -121,11 +101,11 @@ public class UI extends SceneModule{
 
         Colors.put("accent", Palette.accent);
     }
-
+    
     void generateFonts(){
         generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/pixel.ttf"));
         FreeTypeFontParameter param = new FreeTypeFontParameter();
-        param.size = (int) (14 * 2 * Math.max(Unit.dp.scl(1f), 0.5f));
+        param.size = (int)(14*2 * Math.max(Unit.dp.scl(1f), 0.5f));
         param.shadowColor = Color.DARK_GRAY;
         param.shadowOffsetY = 2;
         param.incremental = true;
@@ -148,7 +128,6 @@ public class UI extends SceneModule{
         }
     }
 
-
     @Override
     public void update(){
         if(disableUI) return;
@@ -163,7 +142,7 @@ public class UI extends SceneModule{
             InputHandler input = control.input(i);
 
             if(input.isCursorVisible()){
-                //Draw.color();
+                Draw.color();
 
                 float scl = Unit.dp.scl(3f);
 
@@ -208,7 +187,6 @@ public class UI extends SceneModule{
         menufrag.build(group);
         chatfrag.container().build(group);
         listfrag.build(group);
-        graphfrag.build(group);
         loadfrag.build(group);
     }
 
@@ -244,10 +222,10 @@ public class UI extends SceneModule{
     public void loadLogic(String text, Runnable call){
         loadfrag.show(text);
         Timers.runTask(7f, () ->
-        threads.run(() -> {
-            call.run();
-            threads.runGraphics(loadfrag::hide);
-        }));
+            threads.run(() -> {
+                call.run();
+                threads.runGraphics(loadfrag::hide);
+            }));
     }
 
     public void showTextInput(String title, String text, String def, TextFieldFilter filter, Consumer<String> confirmed){
@@ -273,48 +251,31 @@ public class UI extends SceneModule{
     public void showInfoFade(String info){
         Table table = new Table();
         table.setFillParent(true);
-        table.actions(Actions.fadeOut(3f, Interpolation.fade), Actions.removeActor());
+        table.actions(Actions.fadeOut(7f, Interpolation.fade), Actions.removeActor());
         table.top().add(info).padTop(8);
         Core.scene.add(table);
     }
 
+    public void showInfo(String info){
+        new Dialog("", "dialog"){{
+            getCell(content()).growX();
+            content().margin(15).add(info).width(400f).wrap().get().setAlignment(Align.center, Align.center);
+            buttons().addButton("$text.ok", this::hide).size(90, 50).pad(4);
+        }}.show();
+    }
+
+    List<Block> expensiveBlocks = Arrays.asList(PowerBlocks.thoriumReactor, PowerBlocks.rtgGenerator, PowerBlocks.turbineGenerator, PowerBlocks.thermalGenerator,
+    ProductionBlocks.blastDrill, ProductionBlocks.oilExtractor,
+    StorageBlocks.container, StorageBlocks.vault, StorageBlocks.core,
+    DefenseBlocks.forceProjector, DefenseBlocks.mendProjector, DefenseBlocks.overdriveProjector,
+    CraftingBlocks.arcsmelter, CraftingBlocks.blastMixer, CraftingBlocks.siliconsmelter, CraftingBlocks.pyratiteMixer, CraftingBlocks.plastaniumCompressor, CraftingBlocks.phaseWeaver, CraftingBlocks.centrifuge,
+    TurretBlocks.ripple, TurretBlocks.meltdown, TurretBlocks.spectre, TurretBlocks.fuse, TurretBlocks.cyclone,
+    LiquidBlocks.rotaryPump, LiquidBlocks.thermalPump,
+    UnitBlocks.commandCenter, UnitBlocks.fortressFactory, UnitBlocks.revenantFactory, UnitBlocks.ghoulFactory, UnitBlocks.spiritFactory, UnitBlocks.phantomFactory,
+    DistributionBlocks.massDriver
+    );
     Player lastPlayerAlert = null;//players[0];
     long lastAlertTime = 0;
-    public Player[][] blockActions;// = new Player[world.width()][world.height()];
-    public Player showingPlayerBlocks = null;// players[0];
-
-    public void showPlayerBlocks(Player p){
-        if(p.equals(showingPlayerBlocks) || playerGroup.all().size<1){
-            showingPlayerBlocks = null;
-        }else{
-            showingPlayerBlocks = p;
-        }
-        System.out.println(p.equals(showingPlayerBlocks) + " " + (playerGroup.all().size>1));//
-        System.out.println(p.name);//
-        if (showingPlayerBlocks!=null) System.out.println(showingPlayerBlocks.name);// showingPlayerBlocks.name);
-    }
-
-    public void blockModified(Tile t, int id){
-        Player p = playerGroup.getByID(id);
-        try{
-            if((p != null) && (blockActions != null) && (blockActions.length > 0)) blockActions[t.x][t.y] = p;
-        }catch(ArrayIndexOutOfBoundsException e){
-            blockActions = new Player[world.width()][world.height()];
-        }
-    }
-
-    public void blockModified(TileEntity t, int id){
-        Player p = playerGroup.getByID(id);
-        try{
-            if((p != null) && (blockActions != null)){
-                //if (blockActions.)
-                blockActions[(int) t.x][(int) t.y] = p;
-            }
-        }catch(ArrayIndexOutOfBoundsException e){
-            blockActions = new Player[world.width()][world.height()];
-        }
-    }
-
     public void showAlert(Player p, Block b, BuildRequest br, String action){
         Table table = new Table();
         table.setFillParent(true);
@@ -334,14 +295,6 @@ public class UI extends SceneModule{
             }
         }
         Core.scene.add(table);
-    }
-
-    public void showInfo(String info){
-        new Dialog("", "dialog"){{
-            getCell(content()).growX();
-            content().margin(15).add(info).width(400f).wrap().get().setAlignment(Align.center, Align.center);
-            buttons().addButton("$text.ok", this::hide).size(90, 50).pad(4);
-        }}.show();
     }
 
     public void showInfo(String info, Runnable clicked){

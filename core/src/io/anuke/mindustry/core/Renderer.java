@@ -53,7 +53,7 @@ public class Renderer extends RendererModule{
     public final OverlayRenderer overlays = new OverlayRenderer();
     public final FogRenderer fog = new FogRenderer();
 
-    private int targetscale = baseCameraScale;
+    private int targetscale = 1;
     private Rectangle rect = new Rectangle(), rect2 = new Rectangle();
     private Vector2 avgPosition = new Translator();
     private Vector2 freecamVel = new Vector2();
@@ -65,12 +65,12 @@ public class Renderer extends RendererModule{
 
         Shaders.init();
 
-        Core.cameraScale = baseCameraScale;
+        Core.cameraScale = 1;
         Effects.setEffectProvider((effect, color, x, y, rotation, data) -> {
             if(effect == Fx.none) return;
             if(Settings.getBool("effects")){
                 Rectangle view = rect.setSize(camera.viewportWidth, camera.viewportHeight)
-                .setCenter(camera.position.x, camera.position.y);
+                        .setCenter(camera.position.x, camera.position.y);
                 Rectangle pos = rect2.setSize(effect.size).setCenter(x, y);
 
                 if(view.overlaps(pos)){
@@ -116,8 +116,8 @@ public class Renderer extends RendererModule{
 
         clearColor = new Color(0f, 0f, 0f, 1f);
 
-        effectSurface = Graphics.createSurface(Core.cameraScale);
-        pixelSurface = Graphics.createSurface(Core.cameraScale);
+        effectSurface = Graphics.createSurface(1);//Core.cameraScale);
+        pixelSurface = Graphics.createSurface(1);//Core.cameraScale);
     }
 
     @Override
@@ -135,7 +135,13 @@ public class Renderer extends RendererModule{
 
             if(Mathf.in(camera.zoom, targetzoom, 0.005f)){
                 camera.zoom = 1f;
-                Graphics.setCameraScale(targetscale);
+                //Graphics.setCameraScale(targetscale);
+
+                Core.cameraScale = targetscale;
+                Core.camera.viewportWidth = Gdx.graphics.getWidth() / targetscale;
+                Core.camera.viewportHeight = Gdx.graphics.getHeight() / targetscale;
+                Core.camera.update();
+
                 for(Player player : players){
                     control.input(player.playerIndex).resetCursor();
                 }
@@ -178,6 +184,7 @@ public class Renderer extends RendererModule{
                 freecamVel.x*=0.8f;
                 freecamVel.y*=0.8f;
             }
+
             float prex = camera.position.x, prey = camera.position.y;
             updateShake(0.75f);
 
@@ -324,7 +331,7 @@ public class Renderer extends RendererModule{
             EntityGroup<BaseUnit> group = unitGroups[team.ordinal()];
 
             if(group.count(p -> p.isFlying() == flying) +
-            playerGroup.count(p -> p.isFlying() == flying && p.getTeam() == team) == 0 && flying) continue;
+                    playerGroup.count(p -> p.isFlying() == flying && p.getTeam() == team) == 0 && flying) continue;
 
             drawAndInterpolate(unitGroups[team.ordinal()], u -> u.isFlying() == flying && !u.isDead(), Unit::drawUnder);
             drawAndInterpolate(playerGroup, p -> p.isFlying() == flying && p.getTeam() == team, Unit::drawUnder);
@@ -386,9 +393,9 @@ public class Renderer extends RendererModule{
         targetscale = amount;
         clampScale();
         //scale up all surfaces in preparation for the zoom
-        for(Surface surface : Graphics.getSurfaces()){
-            surface.setScale(targetscale);
-        }
+        //for(Surface surface : Graphics.getSurfaces()){
+        //    surface.setScale(targetscale);
+        //}
     }
 
     public void scaleCamera(int amount){
@@ -415,7 +422,6 @@ public class Renderer extends RendererModule{
 
         draw();
 
-        showFog = true;
         disableUI = false;
         Core.camera.viewportWidth = vpW;
         Core.camera.viewportHeight = vpH;
