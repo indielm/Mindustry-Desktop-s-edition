@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
+import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.game.EventType.StateChangeEvent;
 import io.anuke.mindustry.game.Team;
@@ -15,6 +16,7 @@ import io.anuke.mindustry.graphics.Palette;
 import io.anuke.mindustry.net.Net;
 import io.anuke.mindustry.net.Packets.AdminAction;
 import io.anuke.mindustry.type.Recipe;
+import io.anuke.mindustry.ui.FloatFormat;
 import io.anuke.mindustry.ui.IntFormat;
 import io.anuke.mindustry.ui.Minimap;
 import io.anuke.mindustry.ui.dialogs.FloatingDialog;
@@ -44,7 +46,7 @@ public class HudFragment extends Fragment{
     private Table infolabel;
     private Table lastUnlockTable;
     private Table lastUnlockLayout;
-    private boolean shown = true;
+    public boolean shown = true;
     private float dsize = 58;
     private float isize = 40;
 
@@ -131,10 +133,12 @@ public class HudFragment extends Fragment{
 
             //fps display
             infolabel = cont.table(t -> {
-                IntFormat fps = new IntFormat("text.fps");
+                FloatFormat fps = new FloatFormat("text.fps");
                 IntFormat tps = new IntFormat("text.tps");
                 IntFormat ping = new IntFormat("text.ping");
-                t.label(() -> fps.get(Gdx.graphics.getFramesPerSecond())).padRight(10);
+                //t.label(() -> fps.get(Gdx.graphics.getFramesPerSecond())).padRight(10);
+                t.label(() -> fps.get(Vars.realFPS)).padRight(10);
+
                 t.row();
                 if(Net.hasClient()){
                     t.label(() -> ping.get(Net.getPing())).visible(Net::client).colspan(2);

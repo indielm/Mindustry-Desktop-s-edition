@@ -13,7 +13,7 @@ import static io.anuke.mindustry.Vars.content;
 public class ItemModule extends BlockModule{
     private static int lastID;
 
-    private int[] items = new int[content.items().size];
+    public int[] items = new int[content.items().size];
     private int total;
     private int id = lastID ++;
 

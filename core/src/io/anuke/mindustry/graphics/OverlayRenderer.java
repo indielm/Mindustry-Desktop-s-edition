@@ -5,14 +5,19 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import io.anuke.mindustry.Vars;
+import io.anuke.mindustry.content.Items;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.entities.Player;
 import io.anuke.mindustry.entities.TileEntity;
 import io.anuke.mindustry.game.Team;
 import io.anuke.mindustry.input.InputHandler;
+import io.anuke.mindustry.type.Item;
+import io.anuke.mindustry.ui.fragments.BlockInventoryFragment.ItemFlow;
 import io.anuke.mindustry.world.Block;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.meta.BlockBar;
+import io.anuke.mindustry.world.modules.ItemModule;
 import io.anuke.ucore.core.Core;
 import io.anuke.ucore.core.Graphics;
 import io.anuke.ucore.core.Settings;
@@ -86,25 +91,107 @@ public class OverlayRenderer{
 
     void drawPlayerActions(){
         //System.out.println(showingPlayerBlocks + " " + blockActions + " " + blockActions.length);
-        if (showingPlayerBlocks != null) System.out.println(showingPlayerBlocks.name);
-        if (blockActions == null) System.out.println("nullBlockActions");
-        if (showingPlayerBlocks != null && blockActions!=null && (blockActions.length>0)){
-
-            int i = 0;
-            for (int x = 0; x < world.width(); x++){
-                for (int y = 0; y < world.height(); y++){
-                    if (showingPlayerBlocks.equals(blockActions[x][y])){
-                        Draw.color(Palette.remove);
-                        Lines.square(x*tilesize, y*tilesize, 4);
-                        i++;
+        //if (showingPlayerBlocks != null) System.out.println(showingPlayerBlocks.name);
+        //if (blockActions == null) System.out.println("nullBlockActions");
+        //if (showingPlayerBlocks != null && blockActions!=null && (blockActions.length>0)){
+            try{
+                int i = 0;
+                if (showingPlayerBlocks == null) return;
+                if (blockActions == null) return;
+                for(int x = 0; x < world.width(); x++){
+                    for(int y = 0; y < world.height(); y++){
+                        if(showingPlayerBlocks.equals(blockActions[x][y])){
+                            Draw.color(Palette.remove);
+                            Lines.square(x * tilesize, y * tilesize, 4);
+                            i++;
+                        }
                     }
                 }
+                //System.out.println("found " + i);
             }
-            System.out.println("found " + i);
-        }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+
     }
 
+    int lastItems[] = new int[16];
+    float itemHistory[][] = new float[16][256];
+    float itemFilter[] = new float[16];
+
+    void drawItemGraph(){
+        int q = Vars.fpsLogCounter;
+        Tile k = state.teams.get(players[0].getTeam()).cores.first();
+        int t = 0;
+        int hudOffsetX = ui.hudfrag.shown ? 286 : 44;
+        int hudOffsetY = ui.hudfrag.shown ? 112 : 150;
+        float z = Core.camera.zoom, s = 1.0f/Core.cameraScale;
+        float xo = Core.camera.position.x + s*hudOffsetX - Core.camera.viewportWidth/2, yo = Core.camera.position.y+Core.camera.viewportHeight/2 - hudOffsetY*s;//+Core.camera.viewportHeight*s*0.2f;
+
+
+        for (int item : k.entity.items.items){
+            itemFilter[t] -= (itemFilter[t]-(lastItems[t]-item))/200.0;
+            itemHistory[t][q] = (item-lastItems[t])*0.01f;//itemFilter[t];
+            lastItems[t] = item;
+            t++;
+        }
+        Lines.stroke(2*s);
+        Draw.tscl(s);
+        for (int p = 0; p < 15; p++){
+            Draw.color(Items.Items[p].color);
+            Lines.beginLine();
+            q = Vars.fpsLogCounter;
+
+
+            Draw.tcolor(Items.Items[p].color);
+            Draw.text(Items.Items[p].name,z*(xo + 160), z*(yo + itemHistory[p][q]*s));
+
+            for(int i = 0; i < 256; i++){
+
+                Lines.linePoint(z*(xo + i*s), z*(yo + 100*itemHistory[p][q]*s));
+                if(++q >= 256) q = 0;
+            }
+            Lines.endLine();
+
+        }
+        Draw.tcolor();
+    }
+
+    void drawFPSGraph(){
+        int q = Vars.fpsLogCounter;
+
+        int hudOffsetX = ui.hudfrag.shown ? 286 : 44;
+        int hudOffsetY = ui.hudfrag.shown ? 112 : 150;
+        float z = Core.camera.zoom, s = 1.0f/Core.cameraScale;
+        float xo = Core.camera.position.x + s*hudOffsetX - Core.camera.viewportWidth/2, yo = Core.camera.position.y+Core.camera.viewportHeight/2 - hudOffsetY*s;//+Core.camera.viewportHeight*s*0.2f;
+        //System.out.println(Core.cameraScale + " " + Core.camera.viewportWidth);
+        Draw.color(Color.DARK_GRAY);
+        Lines.stroke(2*s);
+        for(int i = 0; i < 120; i += 20){
+            Draw.tscl(s);
+            Draw.text("" + i, xo - 24*s, yo + i*s + 8*s);
+            Lines.line(z*xo, z*(yo + i*s) , z*(xo + 256*s) , z*(yo + i*s));
+            // Lines.line(xo-246,yo+i+10,xo-256,yo+i+10);
+        }
+
+        Draw.color(Color.LIME);
+
+        Lines.beginLine();
+        for(int i = 0; i < 256; i++){
+            //if (Float.isNaN(Vars.fpsLog[q])) Vars.fpsLog[q] = 0;
+            Lines.linePoint(z*(xo + i*s), z*(yo + Vars.fpsLog[q]*s));
+            //q++;
+            if(++q >= 256) q = 0;
+        }
+        Lines.endLine();
+        Draw.tscl(1);
+        Draw.color();
+    }
     public void drawTop(){
+        //drawItemGraph();
+        if (Vars.fpsGraph) drawFPSGraph();
+        //Draw.text("this is a test", Graphics.mouseWorld().x,Graphics.mouseWorld().y);
+
         drawPlayerActions();
 
         if (ui.hudfrag.blockfrag.convFlow!=null) ui.hudfrag.blockfrag.convFlow.drawPreview();

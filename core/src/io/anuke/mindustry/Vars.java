@@ -30,11 +30,15 @@ import java.util.Locale;
 
 @SuppressWarnings("unchecked")
 public class Vars{
+    public static boolean fpsGraph = true;
+    public static float fpsLog[] = new float[256];
+    public static int fpsLogCounter = 0;
+    public static double realFPS = 0;
     public static final String appName = "Mindustry";
     public static final String discordURL = "https://discord.gg/mindustry";
     public static final String releasesURL = "https://api.github.com/repos/Anuken/Mindustry/releases";
     public static final String contributorsURL = "https://api.github.com/repos/Anuken/Mindustry/contributors";
-    public static final String crashReportURL = "http://mindustry.us.to/report";
+    public static final String crashReportURL = "http://dontdothat.com/";//http://mindustry.us.to/report";
     //time between waves in frames (on normal mode)
     public static final float wavespace = 60 * 60 * 1.5f;
 
@@ -178,5 +182,9 @@ public class Vars{
         customMapDirectory = dataDirectory.child("maps/");
         saveDirectory = dataDirectory.child("saves/");
         baseCameraScale = Math.round(Unit.dp.scl(4));
+    }
+
+    public static void fpsGraph(boolean b){
+        fpsGraph = b;
     }
 }

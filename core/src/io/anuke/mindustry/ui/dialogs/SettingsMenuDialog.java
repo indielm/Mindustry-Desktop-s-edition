@@ -192,6 +192,7 @@ public class SettingsMenuDialog extends SettingsDialog{
         graphics.sliderPref("fpscap", 125, 5, 125, 5, s -> (s > 120 ? Bundles.get("setting.fpscap.none") : Bundles.format("setting.fpscap.text", s)));
 
         if(!mobile){
+            graphics.checkPref("fpsGraph", true, b->Vars.fpsGraph(b));
             graphics.checkPref("vsync", true, b -> Gdx.graphics.setVSync(b));
             graphics.checkPref("fullscreen", false, b -> {
                 if(b){

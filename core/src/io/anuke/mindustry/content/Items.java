@@ -10,6 +10,8 @@ public class Items implements ContentList{
     public static Item stone, copper, lead, densealloy, coal, titanium, thorium, silicon, plastanium, phasefabric, surgealloy,
             biomatter, sand, blastCompound, pyratite;
 
+    public static Item Items[];
+
     @Override
     public void load(){
         copper = new Item("copper", Color.valueOf("d99d73")){{
@@ -100,6 +102,9 @@ public class Items implements ContentList{
             flammability = 0.7f;
             explosiveness = 0.2f;
         }};
+
+        Items = new Item[]{stone, copper, lead, densealloy, coal, titanium, thorium, silicon, plastanium, phasefabric, surgealloy,
+        biomatter, sand, blastCompound, pyratite};
     }
 
     @Override

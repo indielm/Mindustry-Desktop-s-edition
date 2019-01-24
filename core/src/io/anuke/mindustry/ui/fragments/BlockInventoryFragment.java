@@ -109,7 +109,7 @@ public class BlockInventoryFragment extends Fragment{
         tile = null;
     }
 
-    private class ItemFlow{
+    public class ItemFlow{
 
 
         final Item item;
