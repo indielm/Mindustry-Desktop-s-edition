@@ -72,12 +72,11 @@ public class SavePattern extends PApplet {
     }
 
     public void settings(){
-        System.out.println("step5");
         size(100,100,P3D);
         noSmooth();
     }
 
-    String tokenEnc = "";
+    String tokenEnc = "noToken4u";
 
     int RGBAtoARGB(int c){
         return color(alpha(c),red(c),green(c),blue(c));

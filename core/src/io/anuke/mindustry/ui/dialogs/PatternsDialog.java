@@ -56,7 +56,8 @@ public class PatternsDialog extends FloatingDialog{
 
 
     void setup(){
-
+        File f = new File(path);
+        f.mkdir();
         content().clear();
 
         Table table = new Table();
