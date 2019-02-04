@@ -30,7 +30,9 @@ import java.util.Locale;
 
 @SuppressWarnings("unchecked")
 public class Vars{
-    public static boolean fpsGraph = true;
+    public static String hostName = "";
+    public static boolean showQueFragment = true;
+    public static boolean fpsGraph = false;
     public static float fpsLog[] = new float[256];
     public static int fpsLogCounter = 0;
     public static double realFPS = 0;
@@ -186,5 +188,6 @@ public class Vars{
 
     public static void fpsGraph(boolean b){
         fpsGraph = b;
+        ui.graphfrag.toggle();
     }
 }

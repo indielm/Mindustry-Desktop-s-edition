@@ -23,6 +23,7 @@ import io.anuke.mindustry.net.Net;
 import io.anuke.mindustry.net.NetConnection;
 import io.anuke.mindustry.type.*;
 import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.blocks.Floor;
 import io.anuke.mindustry.world.blocks.storage.CoreBlock.CoreEntity;
@@ -38,9 +39,15 @@ import io.anuke.ucore.util.*;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import static com.badlogic.gdx.math.MathUtils.floor;
+import static com.badlogic.gdx.math.MathUtils.round;
 import static io.anuke.mindustry.Vars.*;
+import static java.lang.Math.abs;
 
 public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTrait{
     public static final int timerSync = 2;
@@ -52,7 +59,7 @@ public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTra
     private static final Rectangle rect = new Rectangle();
 
     //region instance variables
-
+    public boolean sortQueue = true;
     public float baseRotation;
     public float pointerX, pointerY;
     public String name = "name";
@@ -79,6 +86,8 @@ public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTra
     private Vector2 movement = new Translator();
     private boolean moved;
     public boolean freecam = false;
+    public Queue<BuildRequest> storedQue;
+    SortBuildRequests requestSorter = new SortBuildRequests();
     //endregion
 
     //region unit and event overrides, utility methods
@@ -98,6 +107,118 @@ public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTra
 
         ScorchDecal.create(player.x, player.y);
         player.onDeath();
+    }
+
+    public void storeQue(){
+        storedQue = new Queue<>();
+        for (BuildRequest br : placeQueue) storedQue.addLast(br);
+        System.out.println("stored " + storedQue.size);
+        ui.hudfrag.showToast("Queue of  " + storedQue.size + " stored");
+    }
+
+    public void recallQue(){
+        if (storedQue == null) return;
+        for (BuildRequest br : storedQue) placeQueue.addLast(br);
+        System.out.println("loaded " + storedQue.size);
+        ui.hudfrag.showToast("Queue of  " + storedQue.size + " recalled");
+    }
+
+
+    public void copyArea2(int startx, int starty, int endx, int endy){
+        storedQue = new Queue<>();
+        for (int rx = startx; rx < endx; rx++){
+            for (int ry = starty; ry < endy; ry++){
+                Tile t = world.tile(rx,ry).target();
+                if (t!= null &&  t.block() != null &&  Recipe.getByResult(t.block()) != null){
+                    BuildRequest br = new BuildRequest(rx, ry, t.getRotation(), Recipe.getByResult(t.block()));
+                    storedQue.addLast(br);
+                }
+            }
+        }
+    }
+
+    public void copyArea(int startx, int starty, int endx, int endy){
+        storedQue = new Queue<>();
+        int w2 = abs(startx-endx)/2, h2 = abs(starty-endy)/2;
+        for (int rx = startx; rx <= endx; rx++){
+            for (int ry = starty; ry <= endy; ry++){
+                Tile t = world.tile(rx,ry);
+                if (t!= null &&  t.block() != null &&  Recipe.getByResult(t.block()) != null){
+                    BuildRequest br = new BuildRequest(rx-startx-w2, ry-starty-h2, t.getRotation(), Recipe.getByResult(t.block()));
+                    storedQue.addLast(br);
+                }
+            }
+        }
+        if (storedQue.size>1) ui.hudfrag.showToast("Copied " + storedQue.size + " blocks");
+    }
+
+    public void pasteQueue(){
+        if (ui.hasMouse()) return;
+        if (storedQue == null || storedQue.size<1) return;
+        int mx = floor(Graphics.mouseWorld().x/tilesize);
+        int my = floor(Graphics.mouseWorld().y/tilesize);
+        for (BuildRequest br : storedQue) {
+            if (Build.validPlace(team,mx + br.x, my + br.y,br.recipe.result,br.rotation)){
+                //if (br.x < world.width() && br.x > 0 && br.y < world.height() && br.y > 0)
+                    placeQueue.addLast(new BuildRequest(mx + br.x, my + br.y, br.rotation, br.recipe));
+            }
+        }
+        ui.hudfrag.showToast("Pasted " + storedQue.size + " blocks");
+    }
+
+    public void sortQueue(){
+        if (!sortQueue) return;
+        ArrayList<BuildRequest> que = new ArrayList<>();
+        for (BuildRequest br : placeQueue) que.add(br);
+        Collections.sort(que, requestSorter);
+        placeQueue.clear();
+        for (BuildRequest br : que) placeQueue.addLast(br);
+    }
+
+    int normRot[] = {3,0,1,2};
+    int counterNormRot[] = {1,2,3,0};
+    int counterRotOffsets[][] = {{}};
+    public void rotateStoredLeft(){
+        //System.out.println("rotatedasdasd");
+        if(storedQue==null) storedQue = new Queue<>();
+        for (BuildRequest br : storedQue) {
+            int s = br.x;
+            br.x = -br.y;
+            if(br.recipe.result.size==2 || br.recipe.result.size==4) br.x--;
+            br.y = s;
+            br.rotation = counterNormRot[br.rotation];
+        }
+    }
+
+    public void rotateStoredRight(){
+
+        if(storedQue==null) storedQue = new Queue<>();
+        for (BuildRequest br : storedQue) {
+            int s = br.x;
+            br.x = br.y;
+            br.y = -s;
+            if(br.recipe.result.size==2 || br.recipe.result.size==4) br.y--;
+            while (br.rotation>3) br.rotation-=4;
+            br.rotation = normRot[br.rotation];
+        }
+    }
+
+    public class SortBuildRequests implements Comparator<BuildRequest>{
+        public int compare(BuildRequest a, BuildRequest b){
+            int xx = round(x/tilesize);
+            int yy = round(y/tilesize);
+            float dist1 = (a.x-xx)*(a.x-xx) + (a.y-yy)*(a.y-yy);
+            float dist2 = (b.x-xx)*(b.x-xx) + (b.y-yy)*(b.y-yy);
+            return round(dist1-dist2);
+        }
+    }
+
+    public void reverseQueue(){
+        Queue<BuildRequest> que = new Queue<>();
+        for (BuildRequest br : placeQueue) que.addFirst(br);
+        placeQueue.clear();
+        for (BuildRequest br : que) placeQueue.addLast(br);
+        ui.hudfrag.showToast("Que order reversed");
     }
 
     @Override
@@ -430,6 +551,9 @@ public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTra
      * Draw all current build requests. Does not draw the beam effect, only the positions.
      */
     public void drawBuildRequests(){
+
+        Draw.tscl(0.25f);
+        int i = 0;
         for(BuildRequest request : getPlaceQueue()){
             if(getCurrentRequest() == request) continue;
 
@@ -467,24 +591,43 @@ public class Player extends Unit implements BuilderTrait, CarryTrait, ShooterTra
                 request.y * tilesize + request.recipe.result.offset() - 1,
                 rad);
 
-                Draw.color(Palette.accent);
+               Draw.color(Palette.accent);
 
                 Lines.square(
                 request.x * tilesize + request.recipe.result.offset(),
                 request.y * tilesize + request.recipe.result.offset(),
                 rad);
+
             }
+            Draw.color(Color.WHITE);
+
+            Draw.text(""+(i++),request.x* tilesize,request.y* tilesize);
         }
 
-        Draw.reset();
+        //Draw.reset();
+        Draw.tscl(1.0f);
     }
 
     //endregion
 
     //region update methods
 
+    int lastPlaceSize;
+    void autoSortQueue(){
+        if (placeQueue.size != lastPlaceSize){
+            lastPlaceSize = placeQueue.size;
+            sortQueue();
+        }
+    }
+
     @Override
     public void update(){
+        autoSortQueue();
+        if (!ui.chatfrag.chatOpen() && !ui.copypastafrag.noRotate){
+            if(Inputs.keyTap("rotatePatternLeft")) rotateStoredLeft();
+            if(Inputs.keyTap("rotatePatternRight")) rotateStoredRight();
+        }
+       // mech = Mechs.javelin;
         hitTime -= Timers.delta();
 
         if(Float.isNaN(x) || Float.isNaN(y)){

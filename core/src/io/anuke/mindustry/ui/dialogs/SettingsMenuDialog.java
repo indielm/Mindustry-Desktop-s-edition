@@ -207,7 +207,7 @@ public class SettingsMenuDialog extends SettingsDialog{
                 Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
             }
         }
-
+        graphics.checkPref("pixelation", false);
         graphics.checkPref("fps", false);
         graphics.checkPref("indicators", true);
         graphics.checkPref("lasers", true);

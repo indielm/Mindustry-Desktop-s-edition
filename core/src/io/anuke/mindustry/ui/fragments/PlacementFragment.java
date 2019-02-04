@@ -73,7 +73,7 @@ public class PlacementFragment extends Fragment{
     public PathFlow convFlow;
     //Input snekKey = Input.CONTROL_LEFT;
 
-    final List<Block> validSnekMaterial = Arrays.asList(new Block[]{DistributionBlocks.conveyor, DistributionBlocks.titaniumconveyor, LiquidBlocks.conduit, LiquidBlocks.pulseConduit});
+    final List<Block> validSnekMaterial = Arrays.asList(DistributionBlocks.conveyor, DistributionBlocks.titaniumconveyor, LiquidBlocks.conduit, LiquidBlocks.pulseConduit);
 
     public void snekStart(){
         if(flowStart != null){

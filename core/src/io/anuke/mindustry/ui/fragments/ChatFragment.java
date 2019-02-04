@@ -71,11 +71,12 @@ public class ChatFragment extends Table{
 
         update(() -> {
 
-            if(Net.active() && Inputs.keyTap("chat")){
+            if(Net.active() && Inputs.keyTap("chat" )){
                 toggle();
             }
 
             if(chatOpen){
+                chatfield.setDisabled(false);
                 if(Inputs.keyTap("chat_history_prev") && historyPos < history.size - 1){
                     if(historyPos == 0) history.set(0, chatfield.getText());
                     historyPos++;
@@ -86,6 +87,9 @@ public class ChatFragment extends Table{
                     updateChat();
                 }
                 scrollPos = (int) Mathf.clamp(scrollPos + Inputs.getAxis("chat_scroll"), 0, Math.max(0, messages.size - messagesShown));
+            }
+            else {
+                chatfield.setDisabled(true);
             }
         });
 

@@ -180,7 +180,7 @@ public class BlockInventoryFragment extends Fragment{
         private String getFilterText(){
             final float intensity = 40.0f; //at this item/sec, full color lerp
             flowColor.set(Color.WHITE);
-            flowColor.lerp(itemLPF < 0 ? Color.SCARLET : Color.LIME, clamp(Math.abs((float) itemLPF), 0, intensity) / intensity);//looks good but can be hard to read
+            flowColor.lerp(itemLPF < 0 ? Color.SCARLET : Color.LIME, clamp(Math.abs(itemLPF), 0, intensity) / intensity);//looks good but can be hard to read
             if ((abs(itemLPF) < 0.006f) || (init>0))return "[accent]  *";
             if (System.currentTimeMillis() - lastTextTime > textUpdateSpeed){
                 text = ((signum(itemLPF) > 0 && abs(itemLPF) > 0.09f) ? "[LIME]+" : "[SCARLET]-") + "[#" + flowColor.toString() + "]" + flowFormat.format(abs(itemLPF));

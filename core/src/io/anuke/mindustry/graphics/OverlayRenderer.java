@@ -1,34 +1,40 @@
 package io.anuke.mindustry.graphics;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import io.anuke.mindustry.Vars;
 import io.anuke.mindustry.content.Items;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.entities.Player;
 import io.anuke.mindustry.entities.TileEntity;
+import io.anuke.mindustry.entities.traits.BuilderTrait.BuildRequest;
 import io.anuke.mindustry.game.Team;
+import io.anuke.mindustry.input.DesktopInput;
 import io.anuke.mindustry.input.InputHandler;
 import io.anuke.mindustry.type.Item;
 import io.anuke.mindustry.ui.fragments.BlockInventoryFragment.ItemFlow;
 import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.meta.BlockBar;
 import io.anuke.mindustry.world.modules.ItemModule;
-import io.anuke.ucore.core.Core;
-import io.anuke.ucore.core.Graphics;
-import io.anuke.ucore.core.Settings;
-import io.anuke.ucore.core.Timers;
+import io.anuke.ucore.core.*;
 import io.anuke.ucore.graphics.Draw;
 import io.anuke.ucore.graphics.Fill;
 import io.anuke.ucore.graphics.Lines;
+import io.anuke.ucore.input.Input;
 import io.anuke.ucore.util.Mathf;
 import io.anuke.ucore.util.Tmp;
 
+import static com.badlogic.gdx.math.MathUtils.floor;
 import static io.anuke.mindustry.Vars.*;
+import static java.lang.Math.abs;
 
 public class OverlayRenderer{
     private static final float indicatorLength = 14f;
@@ -45,7 +51,7 @@ public class OverlayRenderer{
 
             if(!input.isDrawing() || player.isDead()) continue;
 
-            Shaders.outline.color.set(Palette.accent);
+            Shaders.outline.color.set(((DesktopInput)input).isCopying() ? Color.ROYAL: Palette.accent);
             Graphics.beginShaders(Shaders.outline);
 
             input.drawOutlined();
@@ -78,6 +84,7 @@ public class OverlayRenderer{
 
     public void blockModified(Tile t, int id){
         Player p = playerGroup.getByID(id);
+        if (t == null || t.block() == null || p==null) return;
         try{
             if(p != null) {
                 if (blockActions == null) blockActions = new Player[world.width()][world.height()];
@@ -187,11 +194,45 @@ public class OverlayRenderer{
         Draw.tscl(1);
         Draw.color();
     }
-    public void drawTop(){
-        //drawItemGraph();
-        if (Vars.fpsGraph) drawFPSGraph();
-        //Draw.text("this is a test", Graphics.mouseWorld().x,Graphics.mouseWorld().y);
 
+    void drawPlace(int x, int y, Block block, int rotation) {
+        int mx = floor(Graphics.mouseWorld().x/tilesize)*tilesize;
+        int my = floor(Graphics.mouseWorld().y/tilesize)*tilesize;
+
+        if (Build.validPlace(players[0].getTeam(),mx/tilesize+x, my/tilesize+y, block, rotation)) {
+            //Draw.color(255,255,255,180);
+            int selectScale =1;
+            TextureRegion[] regions = block.getBlockIcon();
+            for (TextureRegion region : regions) {
+                Draw.rect(region, mx + x * tilesize + block.offset(), my + y * tilesize + block.offset(),
+                region.getRegionWidth() * selectScale, region.getRegionHeight() * selectScale, block.rotate ? rotation * 90 : 0);
+                Draw.tscl(0.25f);
+                //Draw.text(rotation+"", mx + x * tilesize , my + y * tilesize );
+                //Draw.text(block.size + "", mx + x * tilesize , my + y * tilesize );
+            }
+        } else {
+            Draw.color(Palette.removeBack);
+            Lines.square(mx + x * tilesize + block.offset(), my + y * tilesize + block.offset() - 1, block.size * tilesize / 2f);
+            Draw.color(Palette.remove);
+            Lines.square(mx + x * tilesize + block.offset(), my +y * tilesize + block.offset(), block.size * tilesize / 2f);
+        }
+        Draw.color(Color.WHITE);
+    }
+
+
+    public boolean drawingPastePreview = false;
+    public void pastePreview(){
+        Color colors[] = {Color.ROYAL, Color.WHITE, Color.SCARLET};
+        Shaders.outline.color.set(colors[abs((int)(TimeUtils.millis()/400) % 3)]);
+        Graphics.beginShaders(Shaders.outline);
+
+        if ((players[0].storedQue !=null) && (drawingPastePreview || Inputs.keyDown("quickPaste"))){
+            for (BuildRequest br : players[0].storedQue) drawPlace(br.x, br.y, br.recipe.result, br.rotation);
+        }
+        Graphics.endShaders();
+    }
+    public void drawTop(){
+        pastePreview();
         drawPlayerActions();
 
         if (ui.hudfrag.blockfrag.convFlow!=null) ui.hudfrag.blockfrag.convFlow.drawPreview();

@@ -297,6 +297,7 @@ public class JoinDialog extends FloatingDialog{
         });
 
         Timers.runTask(2f, () -> {
+            Vars.hostName = ip;
             Vars.netClient.beginConnecting();
             Net.connect(ip, port, () -> {
                 hide();

@@ -32,27 +32,10 @@ public class OreHistoryFragment extends Fragment{
 
     @Override
     public void build(Group parent){
-        //int wx = 300, hx = 100;
-
         Core.scene.table().addRect((a, b, w, h) -> {
             Draw.colorl(0.1f);
-            //Fill.crect(0, 0, w, h);
-
-            //Graphics.shader(Shaders.menu);
-            //Fill.crect(0, 0, w, h);
-            //Graphics.shader();
-            //Draw.color();
-
             Draw.color(Palette.accent);
             Lines.line(0,0,control.input(0).getMouseX(),Gdx.graphics.getHeight()-control.input(0).getMouseY() );
-            boolean portrait = Gdx.graphics.getWidth() < Gdx.graphics.getHeight();
-            float logoscl = (int) Unit.dp.scl(7) * (portrait ? 5f / 7f : 1f);
-            TextureRegion logo = Core.skin.getRegion("logotext");
-            float logow = 300;//logo.getRegionWidth() * logoscl;
-            float logoh = 100;//logo.getRegionHeight() * logoscl;
-
-            //Draw.color();
-            //Core.batch.draw(logo, (int) 300, 100, logow, logoh);
         }).top().visible(() -> visible).grow();
 
         parent.fill(cont -> {
@@ -79,9 +62,6 @@ public class OreHistoryFragment extends Fragment{
 
                 pane.table(menu -> {
                     menu.defaults().size(400,200).growX().height(50f).fillY();
-
-                    //menu.addButton("$text.server.bans", ui.bans::show).disabled(b -> Net.client());
-                    //menu.addButton("$text.server.admins", ui.admins::show).disabled(b -> Net.client());
                     menu.addButton("$text.close", this::toggle);
                 }).margin(0f).pad(10f).growX();
 

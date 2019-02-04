@@ -51,9 +51,8 @@ public class ThreadHandler{
                     e.printStackTrace();
                 }
             }
-            int i = 0;
             long nextTime = nanoWait+lastNano;
-            while(System.nanoTime() < nextTime) i++;
+            while(System.nanoTime() < nextTime) {}
             Vars.realFPS = (System.nanoTime()-lastNano)/1000000000.0d;
             Vars.realFPS = Vars.realFPS*fpsCap*fpsCap;
 

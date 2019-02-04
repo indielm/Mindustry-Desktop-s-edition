@@ -1,19 +1,24 @@
 package io.anuke.mindustry.input;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import io.anuke.mindustry.content.Recipes;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.content.blocks.DistributionBlocks;
 import io.anuke.mindustry.core.GameState.State;
 import io.anuke.mindustry.entities.Player;
+import io.anuke.mindustry.entities.traits.BuilderTrait.BuildRequest;
 import io.anuke.mindustry.graphics.Palette;
 import io.anuke.mindustry.input.PlaceUtils.NormalizeDrawResult;
 import io.anuke.mindustry.input.PlaceUtils.NormalizeResult;
 import io.anuke.mindustry.net.Net;
 import io.anuke.mindustry.type.Category;
 import io.anuke.mindustry.type.Recipe;
+import io.anuke.mindustry.ui.fragments.CopyPastaFragment;
 import io.anuke.mindustry.ui.fragments.PlacementFragment;
 import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.Tile;
 import io.anuke.ucore.core.*;
 import io.anuke.ucore.core.Inputs.DeviceType;
@@ -23,6 +28,8 @@ import io.anuke.ucore.input.Input;
 import io.anuke.ucore.scene.ui.layout.Unit;
 import io.anuke.ucore.util.Mathf;
 
+import static com.badlogic.gdx.math.MathUtils.random;
+import static com.badlogic.gdx.math.MathUtils.round;
 import static io.anuke.mindustry.Vars.*;
 import static io.anuke.mindustry.input.CursorType.*;
 import static io.anuke.mindustry.input.PlaceMode.*;
@@ -32,6 +39,7 @@ public class DesktopInput extends InputHandler {
     //controller info
     private float controlx, controly;
     private boolean controlling;
+    public boolean copyMode = false;
     /**
      * Current cursor type.
      */
@@ -44,7 +52,7 @@ public class DesktopInput extends InputHandler {
     /**
      * Whether selecting mode is active.
      */
-    private PlaceMode mode;
+    public PlaceMode mode;
     /**
      * Animation scale for line.
      */
@@ -125,7 +133,27 @@ public class DesktopInput extends InputHandler {
             Lines.rect(result.x, result.y - 1, result.x2 - result.x, result.y2 - result.y);
             Draw.color(Palette.remove);
             Lines.rect(result.x, result.y, result.x2 - result.x, result.y2 - result.y);
-        } else if (isPlacing()) {
+        } else if (mode == copying) {
+            NormalizeDrawResult result = PlaceUtils.normalizeDrawArea(Blocks.air, selectX, selectY, cursorX, cursorY, false, maxLength, 1f);
+            NormalizeResult dresult = PlaceUtils.normalizeArea(selectX, selectY, cursorX, cursorY, rotation, false, maxLength);
+
+            for (int x = dresult.x; x <= dresult.x2; x++) {
+                for (int y = dresult.y; y <= dresult.y2; y++) {
+                    Tile tile = world.tile(x, y);
+                    if (tile == null || !Build.validBreak(player.getTeam(), x, y)) continue;
+                    tile = tile.target();
+                    Draw.color(Color.SCARLET);
+                    Lines.square(tile.drawx(), tile.drawy() - 1, tile.block().size * tilesize / 2f - 1);
+                    Draw.color(Color.WHITE);
+                    Lines.square(tile.drawx(), tile.drawy(), tile.block().size * tilesize / 2f - 1);
+                }
+            }
+
+            Draw.color(Color.SCARLET);
+            Lines.rect(result.x, result.y - 1, result.x2 - result.x, result.y2 - result.y);
+            Draw.color(Color.WHITE);
+            Lines.rect(result.x, result.y, result.x2 - result.x, result.y2 - result.y);
+        }else if (isPlacing()) {
             if (recipe.result.rotate) {
                 Draw.color(!validPlace(cursorX, cursorY, recipe.result, rotation) ? Palette.remove : Palette.placeRotate);
                 Draw.grect("place-arrow", cursorX * tilesize + recipe.result.offset(),
@@ -138,13 +166,39 @@ public class DesktopInput extends InputHandler {
         Draw.reset();
     }
 
+    public boolean isCopying(){
+        return (mode == copying);
+    }
+
+
     @Override
     public void update() {
         if (Net.active() && Inputs.keyTap("player_list")) {
             ui.listfrag.toggle();
         }
-        if ((state.is(State.playing)) && Inputs.keyTap("graph")){
-            //ui.graphfrag.toggle();
+
+        if (!ui.chatfrag.chatOpen() && (state.is(State.playing))) {
+            if(Inputs.keyTap("storeQue")) players[0].storeQue();
+            if(Inputs.keyTap("recallQue")) players[0].recallQue();
+            if(Inputs.keyTap("copyMode")){
+                if(mode == breaking) mode = copying;
+                else if(mode == copying) mode = breaking;
+                else copyMode = !copyMode;
+            }
+            if(Inputs.keyTap("pasteMode")){
+                if (players[0].storedQue==null||players[0].storedQue.size==0 || mode == pasting) mode = none;
+                else mode = pasting;
+            }
+            if( Inputs.keyRelease("quickPaste")) players[0].pasteQueue();
+            if(Inputs.keyTap("toggleSortQueue")){
+                players[0].sortQueue = !players[0].sortQueue;
+                ui.showInfo("Auto queue sort " + (players[0].sortQueue ? "enabled" : "disabled"));
+
+            }
+            if(Inputs.keyTap("sortQueue")){
+                players[0].sortQueue();
+            }
+            if(Inputs.keyTap("reverseQueue")) players[0].reverseQueue();
         }
 
         if (Inputs.keyRelease(section, "select")) {
@@ -215,6 +269,7 @@ public class DesktopInput extends InputHandler {
 
 
     void pollInput() {
+        if (ui.copypastafrag.mouseOver) return;
         Tile selected = tileAt(Gdx.input.getX(), Gdx.input.getY());
         int cursorX = tileX(Gdx.input.getX());
         int cursorY = tileY(Gdx.input.getY());
@@ -255,30 +310,35 @@ public class DesktopInput extends InputHandler {
         } else if (Inputs.keyTap(section, "deselect") && (recipe != null || mode != none || player.isBuilding()) &&
         !(player.getCurrentRequest() != null && player.getCurrentRequest().breaking && KeyBinds.get(section, "deselect") == KeyBinds.get(section, "break"))) {
             if (recipe == null) {
-                player.clearBuilding();
+                if (mode==pasting)mode= none;
+                else player.clearBuilding();
             }
-
             recipe = null;
             mode = none;
         } else if (Inputs.keyTap(section, "break") && !ui.hasMouse()) {
             //is recalculated because setting the mode to breaking removes potential multiblock cursor offset
-            mode = breaking;
+            if (copyMode) {
+                System.out.println("copying");
+                mode = copying;
+                copyMode = false;
+            }
+            else mode = breaking;
             selectX = tileX(Gdx.input.getX());
             selectY = tileY(Gdx.input.getY());
         }
 
-        if (Inputs.keyRelease(section, "break") || Inputs.keyRelease(section, "select")) {
+        renderer.overlays.drawingPastePreview = (mode==pasting);
 
+        if (Inputs.keyRelease(section, "break") || Inputs.keyRelease(section, "select")) {
             if (mode == placing) { //touch up while placing, place everything in selection
                 NormalizeResult result = PlaceUtils.normalizeArea(selectX, selectY, cursorX, cursorY, rotation, true, maxLength);
-
-                for (int i = 0; i <= result.getLength(); i += recipe.result.size) {
-                    int x = selectX + i * Mathf.sign(cursorX - selectX) * Mathf.bool(result.isX());
-                    int y = selectY + i * Mathf.sign(cursorY - selectY) * Mathf.bool(!result.isX());
-
-                    rotation = result.rotation;
-
-                    tryPlaceBlock(x, y);
+                if (recipe!= null && recipe.result!=null){
+                    for(int i = 0; i <= result.getLength(); i += recipe.result.size){
+                        int x = selectX + i * Mathf.sign(cursorX - selectX) * Mathf.bool(result.isX());
+                        int y = selectY + i * Mathf.sign(cursorY - selectY) * Mathf.bool(!result.isX());
+                        rotation = result.rotation;
+                        tryPlaceBlock(x, y);
+                    }
                 }
             } else if (mode == breaking) { //touch up while breaking, break everything in selection
                 NormalizeResult result = PlaceUtils.normalizeArea(selectX, selectY, cursorX, cursorY, rotation, false, maxLength);
@@ -286,19 +346,29 @@ public class DesktopInput extends InputHandler {
                     for (int y = 0; y <= Math.abs(result.y2 - result.y); y++) {
                         int wx = selectX + x * Mathf.sign(cursorX - selectX);
                         int wy = selectY + y * Mathf.sign(cursorY - selectY);
-
                         tryBreakBlock(wx, wy);
                     }
                 }
+            }
+            else if (mode == copying) { //touch up while breaking, break everything in selection
+                NormalizeResult result = PlaceUtils.normalizeArea(selectX, selectY, tileX(Gdx.input.getX()), tileY(Gdx.input.getY()), rotation, false, maxLength);
+                players[0].copyArea(result.x,result.y,result.x2,result.y2);
+                ui.copypastafrag.fileName = ("pattern"+round(random(9999)));
+                copyMode = false;
+                if (players[0].storedQue.size >0) mode = pasting;
+            }
+            else if (mode == pasting){
+                if (Inputs.keyRelease(section, "select")){
+                    player.pasteQueue();
+                }
+                if (!Inputs.keyDown("multipaste")) mode = none;
             }
 
             if (selected != null) {
                 tryDropItems(selected.target(), Graphics.mouseWorld().x, Graphics.mouseWorld().y);
             }
-
-            mode = none;
+            if (mode!=pasting) mode = none;
         }
-
     }
 
     @Override
@@ -344,11 +414,7 @@ public class DesktopInput extends InputHandler {
                 controlx += xa * baseControllerSpeed * scl;
                 controly -= ya * baseControllerSpeed * scl;
                 controlling = true;
-
-                if (player.playerIndex == 0) {
-                    Gdx.input.setCursorCatched(true);
-                }
-
+                if (player.playerIndex == 0) Gdx.input.setCursorCatched(true);
                 Inputs.getProcessor().touchDragged((int) getMouseX(), (int) getMouseY(), player.playerIndex);
             }
 

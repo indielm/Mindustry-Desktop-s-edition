@@ -138,6 +138,7 @@ public interface BuilderTrait extends Entity{
 
     /**Clears the placement queue.*/
     default void clearBuilding(){
+
         getPlaceQueue().clear();
     }
 
@@ -181,6 +182,7 @@ public interface BuilderTrait extends Entity{
         }
 
         Tile tile = world.tile(current.x, current.y);
+        if (tile==null)return;
         if (unit instanceof  Player) renderer.overlays.blockModified(tile,unit.getID());
 
         if(unit.distanceTo(tile) > placeDistance){
@@ -311,7 +313,9 @@ public interface BuilderTrait extends Entity{
         request = getCurrentRequest();
 
         Tile tile = world.tile(request.x, request.y);
+        if (tile==null) return;
         if (unit instanceof  Player) renderer.overlays.blockModified(tile,unit.getID());
+
         if(unit.distanceTo(tile) > placeDistance){
             return;
         }
@@ -373,8 +377,8 @@ public interface BuilderTrait extends Entity{
     }
 
     /**Class for storing build requests. Can be either a place or remove request.*/
-    class BuildRequest{
-        public final int x, y, rotation;
+    class BuildRequest {
+        public  int x, y, rotation;
         public final Recipe recipe;
         public final boolean breaking;
 

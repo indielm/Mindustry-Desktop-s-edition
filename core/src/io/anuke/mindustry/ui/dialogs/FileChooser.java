@@ -21,6 +21,8 @@ import io.anuke.ucore.util.Pooling;
 
 import java.util.Arrays;
 
+import static io.anuke.mindustry.Vars.dataDirectory;
+
 public class FileChooser extends FloatingDialog{
     public static Predicate<FileHandle> pngFilter = file -> file.extension().equalsIgnoreCase("png");
     public static Predicate<FileHandle> mapFilter = file -> file.extension().equalsIgnoreCase(Vars.mapExtension);
@@ -123,7 +125,7 @@ public class FileChooser extends FloatingDialog{
         ImageButton home = new ImageButton("icon-home");
         home.resizeImage(isize);
         home.clicked(() -> {
-            directory = homeDirectory;
+            directory = dataDirectory;
             updateFiles(true);
         });
 

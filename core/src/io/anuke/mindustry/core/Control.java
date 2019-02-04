@@ -372,7 +372,7 @@ public class Control extends Module{
                 }
             }
 
-            if(Inputs.keyTap("screenshot") && !ui.chatfrag.chatOpen()){
+            if(Inputs.keyTap("screenshot") && !ui.chatfrag.chatOpen() && !ui.copypastafrag.noRotate){
                 renderer.takeMapScreenshot();
             }
 

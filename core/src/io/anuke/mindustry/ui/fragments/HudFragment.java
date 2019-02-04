@@ -22,6 +22,7 @@ import io.anuke.mindustry.ui.Minimap;
 import io.anuke.mindustry.ui.dialogs.FloatingDialog;
 import io.anuke.ucore.core.*;
 import io.anuke.ucore.graphics.Hue;
+import io.anuke.ucore.input.Input;
 import io.anuke.ucore.scene.Element;
 import io.anuke.ucore.scene.Group;
 import io.anuke.ucore.scene.actions.Actions;

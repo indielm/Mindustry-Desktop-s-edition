@@ -26,6 +26,7 @@ import io.anuke.ucore.modules.SceneModule;
 import io.anuke.ucore.scene.Group;
 import io.anuke.ucore.scene.Skin;
 import io.anuke.ucore.scene.actions.Actions;
+import io.anuke.ucore.scene.ui.CheckBox;
 import io.anuke.ucore.scene.ui.Dialog;
 import io.anuke.ucore.scene.ui.TextField;
 import io.anuke.ucore.scene.ui.TextField.TextFieldFilter;
@@ -49,6 +50,9 @@ public class UI extends SceneModule{
     public final PlayerListFragment listfrag = new PlayerListFragment();
     public final BackgroundFragment backfrag = new BackgroundFragment();
     public final LoadingFragment loadfrag = new LoadingFragment();
+    public final GraphFragment graphfrag = new GraphFragment();
+    public final QueueFragment queuefrag = new QueueFragment();
+    public final CopyPastaFragment copypastafrag = new CopyPastaFragment();
 
     public AboutDialog about;
     public RestartDialog restart;
@@ -188,6 +192,9 @@ public class UI extends SceneModule{
         chatfrag.container().build(group);
         listfrag.build(group);
         loadfrag.build(group);
+        graphfrag.build(group);
+        //queuefrag.build(group);
+        copypastafrag.build(group);
     }
 
     @Override
@@ -244,6 +251,35 @@ public class UI extends SceneModule{
         }}.show();
     }
 
+    public void showTextInputOption(String title, String text, String def, TextFieldFilter filter, Consumer<String> confirmed){
+        new Dialog(title, "dialog"){{
+            content().margin(30).add(text).padRight(6f);
+            TextField field = content().addField(def, t -> {
+            }).size(170f, 50f).get();
+            field.setTextFieldFilter((f, c) -> field.getText().length() < 12 && filter.acceptChar(f, c));
+            Platform.instance.addDialog(field);
+            buttons().defaults().size(120, 54).pad(4);
+            content().row();
+            CheckBox check = content().addCheck("Upload to discord",false,o->{
+
+            }).get();
+            content().row();
+            buttons().row();
+            buttons().row();
+            buttons().addButton("$text.ok", () -> {
+                String useDiscord = check.isChecked() ? "discord|":"";
+                confirmed.accept(useDiscord+field.getText());
+                hide();
+            }).disabled(b -> field.getText().isEmpty());
+
+            buttons().addButton("$text.cancel", this::hide);
+        }}.show();
+    }
+
+    public void showTextInputOption(String title, String text, String def, Consumer<String> confirmed){
+        showTextInputOption(title, text, def, (field, c) -> true, confirmed);
+    }
+
     public void showTextInput(String title, String text, String def, Consumer<String> confirmed){
         showTextInput(title, text, def, (field, c) -> true, confirmed);
     }
@@ -253,6 +289,29 @@ public class UI extends SceneModule{
         table.setFillParent(true);
         table.actions(Actions.fadeOut(7f, Interpolation.fade), Actions.removeActor());
         table.top().add(info).padTop(8);
+        Core.scene.add(table);
+    }
+
+    public void showInfoFade2(String info){
+        Table table = new Table();
+        table.setFillParent(true);
+        table.actions(moveTo(0,-100));
+        table.actions(Actions.fadeOut(6f, Interpolation.fade), Actions.removeActor());
+        table.actions(Actions.moveBy(0,100f,7f,Interpolation.fastSlow));//7f, Interpolation.fade), Actions.removeActor());;
+        table.top().add(info).padTop(8);
+        Core.scene.add(table);
+    }
+
+    int fade3step = 0;
+    public void showInfoFade3(String info){
+        Table table = new Table();
+        table.setFillParent(true);
+        table.actions(moveTo(fade3step*400 - 500,-900));
+        table.actions(Actions.fadeOut(7f, Interpolation.slowFast), Actions.removeActor());
+        table.actions(Actions.moveBy(0,800f,7f));//7f, Interpolation.fade), Actions.removeActor());;
+        table.top().add(info).padTop(8);
+        fade3step++;
+        if (fade3step==3) fade3step = 0;
         Core.scene.add(table);
     }
 

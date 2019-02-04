@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.BufferUtils;
@@ -19,9 +20,12 @@ import io.anuke.mindustry.entities.Unit;
 import io.anuke.mindustry.entities.effect.GroundEffectEntity;
 import io.anuke.mindustry.entities.effect.GroundEffectEntity.GroundEffect;
 import io.anuke.mindustry.entities.traits.BelowLiquidTrait;
+import io.anuke.mindustry.entities.traits.BuilderTrait.BuildRequest;
 import io.anuke.mindustry.entities.units.BaseUnit;
 import io.anuke.mindustry.game.Team;
 import io.anuke.mindustry.graphics.*;
+import io.anuke.mindustry.world.Block;
+import io.anuke.mindustry.world.Build;
 import io.anuke.mindustry.world.blocks.defense.ForceProjector.ShieldEntity;
 import io.anuke.ucore.core.*;
 import io.anuke.ucore.entities.EntityDraw;
@@ -42,12 +46,13 @@ import io.anuke.ucore.util.Mathf;
 import io.anuke.ucore.util.Pooling;
 import io.anuke.ucore.util.Translator;
 
+import static com.badlogic.gdx.math.MathUtils.floor;
 import static io.anuke.mindustry.Vars.*;
 import static io.anuke.ucore.core.Core.batch;
 import static io.anuke.ucore.core.Core.camera;
 
 public class Renderer extends RendererModule{
-    public final Surface effectSurface;
+    public  Surface effectSurface;
     public final BlockRenderer blocks = new BlockRenderer();
     public final MinimapRenderer minimap = new MinimapRenderer();
     public final OverlayRenderer overlays = new OverlayRenderer();
@@ -57,6 +62,7 @@ public class Renderer extends RendererModule{
     private Rectangle rect = new Rectangle(), rect2 = new Rectangle();
     private Vector2 avgPosition = new Translator();
     private Vector2 freecamVel = new Vector2();
+    boolean pixelation = false;
 
     public Renderer(){
         Core.batch = new SpriteBatch(4096);
@@ -65,7 +71,7 @@ public class Renderer extends RendererModule{
 
         Shaders.init();
 
-        Core.cameraScale = 1;
+        Core.cameraScale = (pixelation ? baseCameraScale : 1);
         Effects.setEffectProvider((effect, color, x, y, rotation, data) -> {
             if(effect == Fx.none) return;
             if(Settings.getBool("effects")){
@@ -116,8 +122,8 @@ public class Renderer extends RendererModule{
 
         clearColor = new Color(0f, 0f, 0f, 1f);
 
-        effectSurface = Graphics.createSurface(1);//Core.cameraScale);
-        pixelSurface = Graphics.createSurface(1);//Core.cameraScale);
+        effectSurface = Graphics.createSurface(pixelation ? Core.cameraScale : 1);//Core.cameraScale);
+        pixelSurface = Graphics.createSurface(pixelation ? Core.cameraScale : 1);//Core.cameraScale);
     }
 
     @Override
@@ -126,6 +132,7 @@ public class Renderer extends RendererModule{
 
     @Override
     public void update(){
+        pixelation = Settings.getBool("pixelation");
         //TODO hack, find source of this bug
         Color.WHITE.set(1f, 1f, 1f, 1f);
 
@@ -135,11 +142,12 @@ public class Renderer extends RendererModule{
 
             if(Mathf.in(camera.zoom, targetzoom, 0.005f)){
                 camera.zoom = 1f;
-                //Graphics.setCameraScale(targetscale);
-
-                Core.cameraScale = targetscale;
-                Core.camera.viewportWidth = Gdx.graphics.getWidth() / targetscale;
-                Core.camera.viewportHeight = Gdx.graphics.getHeight() / targetscale;
+                if (pixelation) Graphics.setCameraScale(targetscale);
+                //else{
+                    Core.cameraScale = targetscale;
+                    Core.camera.viewportWidth = Gdx.graphics.getWidth() / targetscale;
+                    Core.camera.viewportHeight = Gdx.graphics.getHeight() / targetscale;
+                //}
                 Core.camera.update();
 
                 for(Player player : players){
@@ -393,9 +401,11 @@ public class Renderer extends RendererModule{
         targetscale = amount;
         clampScale();
         //scale up all surfaces in preparation for the zoom
-        //for(Surface surface : Graphics.getSurfaces()){
-        //    surface.setScale(targetscale);
-        //}
+        if (pixelation){
+            for(Surface surface : Graphics.getSurfaces()){
+                surface.setScale(targetscale);
+            }
+        }
     }
 
     public void scaleCamera(int amount){
@@ -446,4 +456,25 @@ public class Renderer extends RendererModule{
         ui.showInfoFade(Bundles.format("text.screenshot", file.toString()));
     }
 
+    void drawPlace(int x, int y, Block block, int rotation) {
+        int mx = floor(Graphics.mouseWorld().x/tilesize)*tilesize;
+        int my = floor(Graphics.mouseWorld().y/tilesize)*tilesize;
+        if (Build.validPlace(players[0].getTeam(),mx/tilesize+x, my/tilesize+y, block, rotation)) {
+            Draw.color(255,255,255,180);
+            int selectScale =1;
+            TextureRegion[] regions = block.getBlockIcon();
+            for (TextureRegion region : regions) {
+                Draw.rect(region, mx + x * tilesize + block.offset(), my + y * tilesize + block.offset(),
+                region.getRegionWidth() * selectScale, region.getRegionHeight() * selectScale, block.rotate ? rotation * 90 : 0);
+                Draw.tscl(0.25f);
+                //Draw.text(rotation+"", mx + x * tilesize , my + y * tilesize );
+                //Draw.text(block.size + "", mx + x * tilesize , my + y * tilesize );
+            }
+        } else {
+            Draw.color(Palette.removeBack);
+            Lines.square(mx + x * tilesize + block.offset(), my + y * tilesize + block.offset() - 1, block.size * tilesize / 2f);
+            Draw.color(Palette.remove);
+            Lines.square(mx + x * tilesize + block.offset(), my +y * tilesize + block.offset(), block.size * tilesize / 2f);
+        }
+    }
 }

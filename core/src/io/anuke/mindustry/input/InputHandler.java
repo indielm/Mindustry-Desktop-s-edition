@@ -213,7 +213,7 @@ public abstract class InputHandler extends InputAdapter{
         }
 
         if(!consumed && player.isBuilding()){
-            player.clearBuilding();
+            if (((DesktopInput) control.input(0)).mode != PlaceMode.pasting) player.clearBuilding();
             recipe = null;
             return true;
         }

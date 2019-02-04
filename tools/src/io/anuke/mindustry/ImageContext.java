@@ -19,14 +19,13 @@ import java.io.File;
 import java.io.IOException;
 
 public class ImageContext {
-    private BufferedImage image;
+    public BufferedImage image;
 
     public void load() throws IOException{
         Log.setLogger(new NoopLogHandler());
         Vars.content = new ContentLoader();
         Vars.content.load();
         Log.setLogger(new LogHandler());
-
         String spritesFolder = new File("../../../assets/sprites").getAbsolutePath();
         TextureAtlasData data = new TextureAtlasData(new FileHandle(spritesFolder + "/sprites.atlas"),
                 new FileHandle(spritesFolder), false);
