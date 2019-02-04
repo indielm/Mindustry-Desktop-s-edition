@@ -173,6 +173,7 @@ public class DesktopInput extends InputHandler {
 
     @Override
     public void update() {
+        if(mode==pasting) players[0].freecam = true;
         if (Net.active() && Inputs.keyTap("player_list")) {
             ui.listfrag.toggle();
         }

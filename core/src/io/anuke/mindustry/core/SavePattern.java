@@ -77,20 +77,14 @@ public class SavePattern extends PApplet {
         noSmooth();
     }
 
-    String tokenEnc = "thisIsNotAToken";
+    String tokenEnc = "";
 
     int RGBAtoARGB(int c){
-       // return color(alpha(c),blue(c),green(c),red(c));
         return color(alpha(c),red(c),green(c),blue(c));
     }
 
     public void setup(){
-        //String spritesFolder = new File("../../../assets/sprites").getAbsolutePath();
-        //File spritesPng = new File(spritesFolder + "/sprites.png");
-        //spriteSheet = loadImage(spritesPng.getAbsolutePath());
 
-       // ObjectSet<Texture> t = Core.atlas.getTextures();
-        //t.get(0);
         Texture t = Core.atlas.getTextures().first();
         t.getTextureData().prepare();
 
@@ -204,7 +198,7 @@ public class SavePattern extends PApplet {
             File file = new File(f);
             attachments.get(0).download(file);
         }
-
+        bot.shutdown();
         ui.showInfoFade2("Pattern " +  imgFile.getName() + " uploaded to discord.");
     }
 
@@ -324,6 +318,7 @@ public class SavePattern extends PApplet {
         catch(Exception e){
             e.printStackTrace();
         }
+        bot.shutdown();
         ui.showInfoFade2( "downloaded " + c + " patterns");
         discordDownloaded = true;
     }

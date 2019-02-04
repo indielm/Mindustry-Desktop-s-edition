@@ -101,7 +101,7 @@ public class PatternsDialog extends FloatingDialog{
                 button.row();
             }
             else {
-                widthAccum += 64;
+                widthAccum += maxwidth;
                 table.addImageTextButton(pfile.getName(), "icon-folder", 64, ()->{
                     path = pfile.getAbsolutePath();//dataDirectory.path() + "/patterns/";
                     setup();
@@ -124,6 +124,7 @@ public class PatternsDialog extends FloatingDialog{
         content().center();
         //content().debug();
         Table buttons = new Table();
+        content().add(path).row();
         buttons.addImageTextButton("$text.back", "icon-arrow-left", 30f, ()->{
             path = dataDirectory.path() + "/patterns/";
             hide();
