@@ -27,6 +27,8 @@ _Running:_ `./gradlew desktop:run`
 _Building:_ `./gradlew desktop:dist`
 #### MacOS X
 
+##### NOTE: Mac OS X is not actively supported, as I do not have access to a Mac.
+
 _Running:_ `./gradlew desktop:run`  
 _Building:_ `./gradlew desktop:dist`
 #### For Server Builds...
